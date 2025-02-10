@@ -1,50 +1,77 @@
-# Welcome to your Expo app 👋
+## Requirements for Uber Eats Clone Mobile Application
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+### 1. **User Authentication & Profile Management**
+- User sign-up and login via email/password and OAuth (Google, Facebook, Apple)
+- Profile management: update personal details, delivery addresses, and payment methods
+- Secure token-based authentication
 
-## Get started
+### 2. **Restaurant Listings & Menus**
+- Display a list of restaurants with filters (e.g., cuisine type, ratings, distance)
+- View restaurant details including menu, ratings, delivery time, and offers
+- Search and filter restaurants and food items
 
-1. Install dependencies
+### 3. **Cart & Order Management**
+- Add/remove food items to the cart
+- Modify item quantity
+- View order summary before checkout
+- Apply promo codes and discounts
 
-   ```bash
-   npm install
-   ```
+### 4. **Checkout & Payment Integration**
+- Secure payment gateway integration (Stripe, PayPal, Apple Pay, Google Pay)
+- Save payment methods securely
+- Real-time order confirmation
 
-2. Start the app
+### 5. **Order Tracking & Live Updates**
+- Real-time order tracking from restaurant preparation to delivery
+- Notifications for order status updates (e.g., order accepted, food preparing, out for delivery)
+- Estimated delivery time and live map tracking of the delivery person
 
-   ```bash
-    npx expo start
-   ```
+### 6. **Delivery Management**
+- Assign orders to delivery partners
+- Show delivery partner details and real-time location
+- Contact delivery partner via chat/call
 
-In the output, you'll find options to open the app in a
+### 7. **Ratings & Reviews**
+- Leave ratings and reviews for restaurants and delivery partners
+- View ratings and reviews before placing orders
+- Report issues with orders or delivery
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+### 8. **Push Notifications**
+- Order confirmation and status updates
+- Promotional offers and discounts
+- Restaurant recommendations and reminders
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+### 9. **User Preferences & Settings**
+- Manage saved addresses
+- Enable/disable notifications
+- Change language and theme preferences (Dark/Light Mode)
 
-## Get a fresh project
+### 10. **Admin Panel (Optional for Future Enhancements)**
+- Manage restaurants and their menus
+- Handle orders and delivery assignments
+- Monitor user feedback and reports
+- Manage promotional offers and discounts
 
-When you're ready, run:
+### 11. **Security & Privacy**
+- Secure user authentication and data encryption
+- Payment security measures with PCI compliance
+- Privacy settings for users to control data sharing
 
-```bash
-npm run reset-project
-```
+### 12. **Localization & Accessibility**
+- Multi-language support
+- RTL (Right-to-Left) support for specific languages
+- Voice accessibility and screen reader compatibility
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+### 13. **Performance Optimization**
+- Lazy loading of images and menu items
+- Caching frequently accessed data
+- Optimize animations and transitions for smooth UI
 
-## Learn more
+### 14. **Testing & Deployment**
+- Unit tests using Jest and React Native Testing Library
+- Integration tests for major user flows
+- End-to-end testing using Detox
+- Deploy using Expo’s managed workflow
 
-To learn more about developing your project with Expo, look at the following resources:
+These requirements cover the essential functionalities needed for an Uber Eats clone mobile application. Additional features can be introduced based on business needs and user feedback.
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
-
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
