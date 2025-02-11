@@ -1,5 +1,5 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Image, ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
@@ -65,19 +65,16 @@ export default function RestaurantScreen() {
     );
   }
 
+  useEffect(() => {
+    router.setParams({ title: restaurant.name });
+  }, [restaurant]);
+
   const filteredMenu = selectedCategory === 'all' 
     ? restaurant.menu 
     : restaurant.menu.filter(item => item.category === selectedCategory);
 
   return (
     <ThemedView style={styles.container}>
-      {/* Header */}
-      <ThemedView style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-          <Ionicons name="arrow-back" size={24} color="#000" />
-        </TouchableOpacity>
-      </ThemedView>
-
       <ScrollView>
         {/* Restaurant Image */}
         <Image source={{ uri: restaurant.image }} style={styles.restaurantImage} />
@@ -153,24 +150,6 @@ export default function RestaurantScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-  },
-  header: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    height: 90,
-    paddingTop: 40,
-    paddingHorizontal: 16,
-    zIndex: 1,
-  },
-  backButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: 'white',
-    alignItems: 'center',
-    justifyContent: 'center',
   },
   restaurantImage: {
     width: '100%',

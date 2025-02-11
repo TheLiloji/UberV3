@@ -42,7 +42,7 @@ export const POPULAR_RESTAURANTS: Restaurant[] = [
         category: 'starters',
         description: 'Soupe traditionnelle avec croûtons et fromage gratiné',
         price: 8.90,
-        image: 'https://picsum.photos/200/200?random=10',
+        image: 'https://images.unsplash.com/photo-1549396563-92fab230895a?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8M3x8c291cGUlMjAlQzMlQTAlMjBsJ29pZ25vbnxlbnwwfHwwfHx8MA%3D%3D',
       },
       {
         id: '3',
@@ -72,14 +72,14 @@ export const POPULAR_RESTAURANTS: Restaurant[] = [
         category: 'desserts',
         description: 'Crème vanille avec caramel croustillant',
         price: 7.90,
-        image: 'https://picsum.photos/200/200?random=12',
+        image: 'https://images.unsplash.com/photo-1615235739538-95040f341ba8?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8M3x8Y3IlQzMlQThtZSUyMGJydWwlQzMlQTl8ZW58MHx8MHx8fDA%3D',
       },
     ],
   },
   {
     id: '2',
     name: 'Sushi Master',
-    image: 'https://picsum.photos/200/200?random=2',
+    image: 'https://images.unsplash.com/photo-1480796927426-f609979314bd?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTJ8fGphcG9uYWlzfGVufDB8fDB8fHww',
     rating: 4.6,
     deliveryTime: '20-35',
     deliveryFee: '3.99',
@@ -103,7 +103,7 @@ export const POPULAR_RESTAURANTS: Restaurant[] = [
         category: 'starters',
         description: 'Fèves de soja vapeur au sel de mer',
         price: 5.90,
-        image: 'https://picsum.photos/200/200?random=13',
+        image: 'https://plus.unsplash.com/premium_photo-1666318300348-a4d0226d81ad?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8NXx8RWRhbWFtZXxlbnwwfHwwfHx8MA%3D%3D',
       },
       {
         id: '3',
@@ -118,7 +118,7 @@ export const POPULAR_RESTAURANTS: Restaurant[] = [
         category: 'main',
         description: '24 pièces : sashimi, maki, nigiri',
         price: 32.90,
-        image: 'https://picsum.photos/200/200?random=14',
+        image: 'https://images.unsplash.com/photo-1553621042-f6e147245754?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTB8fHN1c2hpfGVufDB8fDB8fHww',
         options: [
           {
             name: 'Wasabi',
@@ -225,12 +225,12 @@ export const POPULAR_RESTAURANTS: Restaurant[] = [
 ];
 
 export const MENU_CATEGORIES = [
-  'all',
-  'starters',
-  'main',
-  'desserts',
-  'drinks',
-  'specials',
+  'Tout',
+  'Entrées',
+  'Plats',
+  'Desserts',
+  'Boissons',
+  'Specialités',
 ];
 
 export interface MenuItem {
@@ -248,33 +248,4 @@ export interface MenuItem {
       price: number;
     }[];
   }[];
-}
-
-export const MENU_ITEMS: MenuItem[] = [
-  {
-    id: '1',
-    name: 'Entrées',
-    category: 'starters',
-    description: 'Nos entrées signature',
-    price: 0,
-  },
-  {
-    id: '2',
-    name: 'Salade César',
-    category: 'starters',
-    description: 'Laitue romaine, croûtons, parmesan, sauce césar maison',
-    price: 9.90,
-    image: 'https://picsum.photos/200/200?random=7',
-    options: [
-      {
-        name: 'Protéine',
-        choices: [
-          { id: '1', name: 'Poulet grillé', price: 2 },
-          { id: '2', name: 'Crevettes', price: 3 },
-          { id: '3', name: 'Saumon fumé', price: 3 },
-        ],
-      },
-    ],
-  },
-  // ... Ajoutez plus d'éléments de menu ici
-]; 
+};
