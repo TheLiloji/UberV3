@@ -14,6 +14,7 @@ interface MenuItem {
   price: number;
   image?: string;
   category: string;
+  options?: { name: string; choices: { id: string; name: string; price: number }[] }[];
 }
 
 const MENU_ITEMS: MenuItem[] = [
@@ -64,6 +65,10 @@ export default function RestaurantScreen() {
     );
   }
 
+  const filteredMenu = selectedCategory === 'all' 
+    ? restaurant.menu 
+    : restaurant.menu.filter(item => item.category === selectedCategory);
+
   return (
     <ThemedView style={styles.container}>
       {/* Header */}
@@ -94,7 +99,7 @@ export default function RestaurantScreen() {
           showsHorizontalScrollIndicator={false} 
           style={styles.categoriesContainer}
         >
-          {['all', 'starters', 'main', 'desserts'].map((category) => (
+          {['all', ...new Set(restaurant.menu.map(item => item.category))].map((category) => (
             <TouchableOpacity
               key={category}
               onPress={() => setSelectedCategory(category)}
@@ -103,14 +108,20 @@ export default function RestaurantScreen() {
                 selectedCategory === category && styles.selectedCategory,
               ]}
             >
-              <ThemedText>{category}</ThemedText>
+              <ThemedText 
+                style={[
+                  selectedCategory === category && { color: 'white' }
+                ]}
+              >
+                {category}
+              </ThemedText>
             </TouchableOpacity>
           ))}
         </ScrollView>
 
         {/* Menu Items */}
         <ThemedView style={styles.menuContainer}>
-          {MENU_ITEMS.map((item) => (
+          {filteredMenu.map((item) => (
             <TouchableOpacity key={item.id} style={styles.menuItem}>
               <ThemedView style={styles.menuItemContent}>
                 <ThemedView style={styles.menuItemInfo}>
@@ -120,6 +131,11 @@ export default function RestaurantScreen() {
                   </ThemedText>
                   {item.price > 0 && (
                     <ThemedText style={styles.menuItemPrice}>{item.price.toFixed(2)}€</ThemedText>
+                  )}
+                  {item.options && (
+                    <ThemedText style={styles.menuItemOptions}>
+                      Options disponibles
+                    </ThemedText>
                   )}
                 </ThemedView>
                 {item.image && (
@@ -210,5 +226,11 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     borderRadius: 8,
+  },
+  menuItemOptions: {
+    color: '#666',
+    fontSize: 12,
+    marginTop: 4,
+    fontStyle: 'italic',
   },
 }); 

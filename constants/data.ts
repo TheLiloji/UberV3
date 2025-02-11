@@ -11,6 +11,7 @@ export interface Restaurant {
   address: string;
   isOpen: boolean;
   minimumOrder: number;
+  menu: MenuItem[];
 }
 
 export const POPULAR_RESTAURANTS: Restaurant[] = [
@@ -27,6 +28,53 @@ export const POPULAR_RESTAURANTS: Restaurant[] = [
     address: '15 rue de la Paix, 75002 Paris',
     isOpen: true,
     minimumOrder: 15,
+    menu: [
+      {
+        id: '1',
+        name: 'Entrées',
+        category: 'starters',
+        description: 'Nos entrées signature',
+        price: 0,
+      },
+      {
+        id: '2',
+        name: 'Soupe à l\'Oignon',
+        category: 'starters',
+        description: 'Soupe traditionnelle avec croûtons et fromage gratiné',
+        price: 8.90,
+        image: 'https://picsum.photos/200/200?random=10',
+      },
+      {
+        id: '3',
+        name: 'Plats',
+        category: 'main',
+        description: 'Nos spécialités',
+        price: 0,
+      },
+      {
+        id: '4',
+        name: 'Coq au Vin',
+        category: 'main',
+        description: 'Poulet mijoté au vin rouge avec lardons et champignons',
+        price: 22.90,
+        image: 'https://picsum.photos/200/200?random=11',
+      },
+      {
+        id: '5',
+        name: 'Desserts',
+        category: 'desserts',
+        description: 'Nos desserts maison',
+        price: 0,
+      },
+      {
+        id: '6',
+        name: 'Crème Brûlée',
+        category: 'desserts',
+        description: 'Crème vanille avec caramel croustillant',
+        price: 7.90,
+        image: 'https://picsum.photos/200/200?random=12',
+      },
+    ],
   },
   {
     id: '2',
@@ -41,6 +89,48 @@ export const POPULAR_RESTAURANTS: Restaurant[] = [
     address: '8 rue du Dragon, 75006 Paris',
     isOpen: true,
     minimumOrder: 20,
+    menu: [
+      {
+        id: '1',
+        name: 'Entrées',
+        category: 'starters',
+        description: 'Nos entrées japonaises',
+        price: 0,
+      },
+      {
+        id: '2',
+        name: 'Edamame',
+        category: 'starters',
+        description: 'Fèves de soja vapeur au sel de mer',
+        price: 5.90,
+        image: 'https://picsum.photos/200/200?random=13',
+      },
+      {
+        id: '3',
+        name: 'Sushis',
+        category: 'main',
+        description: 'Nos sushis signature',
+        price: 0,
+      },
+      {
+        id: '4',
+        name: 'Plateau Royal',
+        category: 'main',
+        description: '24 pièces : sashimi, maki, nigiri',
+        price: 32.90,
+        image: 'https://picsum.photos/200/200?random=14',
+        options: [
+          {
+            name: 'Wasabi',
+            choices: [
+              { id: '1', name: 'Normal', price: 0 },
+              { id: '2', name: 'Extra', price: 1 },
+              { id: '3', name: 'Sans', price: 0 },
+            ],
+          },
+        ],
+      },
+    ],
   },
   {
     id: '3',
@@ -55,6 +145,7 @@ export const POPULAR_RESTAURANTS: Restaurant[] = [
     address: '45 rue Oberkampf, 75011 Paris',
     isOpen: true,
     minimumOrder: 15,
+    menu: [],
   },
   {
     id: '4',
@@ -69,6 +160,7 @@ export const POPULAR_RESTAURANTS: Restaurant[] = [
     address: '12 rue de la Roquette, 75011 Paris',
     isOpen: true,
     minimumOrder: 15,
+    menu: [],
   },
   {
     id: '5',
@@ -83,6 +175,7 @@ export const POPULAR_RESTAURANTS: Restaurant[] = [
     address: '3 rue Saintonge, 75003 Paris',
     isOpen: true,
     minimumOrder: 20,
+    menu: [],
   },
   {
     id: '6',
@@ -97,6 +190,7 @@ export const POPULAR_RESTAURANTS: Restaurant[] = [
     address: '28 avenue de Choisy, 75013 Paris',
     isOpen: true,
     minimumOrder: 15,
+    menu: [],
   },
   {
     id: '7',
@@ -111,6 +205,7 @@ export const POPULAR_RESTAURANTS: Restaurant[] = [
     address: '67 rue de Charonne, 75011 Paris',
     isOpen: true,
     minimumOrder: 15,
+    menu: [],
   },
   {
     id: '8',
@@ -125,6 +220,7 @@ export const POPULAR_RESTAURANTS: Restaurant[] = [
     address: '22 rue du Faubourg Saint-Denis, 75010 Paris',
     isOpen: true,
     minimumOrder: 20,
+    menu: [],
   },
 ];
 
