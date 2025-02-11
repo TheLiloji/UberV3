@@ -3,6 +3,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { TouchableOpacity } from 'react-native';
 
 import { POPULAR_RESTAURANTS } from '@/constants/data';
+import { Colors } from '@/constants/Colors';
 
 export default function RestaurantLayout() {
   const { id } = useGlobalSearchParams();
@@ -13,13 +14,13 @@ export default function RestaurantLayout() {
 
   const CartButton = () => (
     <TouchableOpacity 
-      onPress={() => router.push('/cart')}
+      onPress={() => router.push('/(tabs)/cart')}
       style={{ 
         marginRight: 16,
         padding: 4,
       }}
     >
-      <Ionicons name="cart-outline" size={24} color="white" />
+      <Ionicons name="cart-outline" size={24} color={Colors.text} />
     </TouchableOpacity>
   );
 
@@ -31,9 +32,9 @@ export default function RestaurantLayout() {
           title: restaurantName,
           headerShadowVisible: false,
           headerStyle: {
-            backgroundColor: 'black',
+            backgroundColor: Colors.background,
           },
-          headerTintColor: 'white',
+          headerTintColor: Colors.text,
           headerRight: () => <CartButton />,
         }}
       />

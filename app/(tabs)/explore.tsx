@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
+import { Colors } from '@/constants/Colors';
 
 interface MenuOption {
   id: string;
@@ -91,16 +92,18 @@ export default function ExploreScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: Colors.background,
   },
   header: {
     padding: 16,
     paddingTop: 60,
     borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
+    borderBottomColor: Colors.peach,
+    backgroundColor: Colors.restaurantBackground,
   },
   menuContainer: {
     padding: 16,
+    backgroundColor: Colors.restaurantBackground,
   },
   menuItem: {
     marginBottom: 16,
@@ -118,16 +121,17 @@ const styles = StyleSheet.create({
   menuItemTitle: {
     marginLeft: 16,
     fontSize: 16,
+    color: Colors.text,
   },
   logoutButton: {
     margin: 16,
     padding: 16,
-    backgroundColor: '#f0f0f0',
+    backgroundColor: Colors.peach,
     borderRadius: 8,
     alignItems: 'center',
   },
   logoutText: {
-    color: 'red',
+    color: Colors.text,
     fontSize: 16,
     fontWeight: 'bold',
   },

@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
+import { Colors } from '@/constants/Colors';
 
 export default function CartScreen() {
   const router = useRouter();
@@ -41,7 +42,7 @@ export default function CartScreen() {
 
         <TouchableOpacity 
           style={styles.checkoutButton}
-          onPress={() => router.back}
+          onPress={() => router.push('/checkout')}
         >
           <ThemedText style={styles.checkoutButtonText}>
             Commander
@@ -55,7 +56,7 @@ export default function CartScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: Colors.background,
   },
   header: {
     flexDirection: 'row',
@@ -91,7 +92,7 @@ const styles = StyleSheet.create({
     borderTopColor: '#f0f0f0',
   },
   checkoutButton: {
-    backgroundColor: 'black',
+    backgroundColor: Colors.orange,
     padding: 16,
     borderRadius: 8,
     marginTop: 16,

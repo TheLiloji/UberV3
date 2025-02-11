@@ -22,14 +22,14 @@ export default function TabLayout() {
         padding: 4,
       }}
     >
-      <Ionicons name="cart-outline" size={24} color="white" />
+      <Ionicons name="cart-outline" size={24} color={Colors.text} />
     </TouchableOpacity>
   );
 
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
+        tabBarActiveTintColor: Colors.orange,
         headerShown: true,
         tabBarButton: HapticTab,
         tabBarBackground: TabBarBackground,

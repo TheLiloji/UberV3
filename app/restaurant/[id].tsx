@@ -6,6 +6,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { POPULAR_RESTAURANTS } from '@/constants/data';
+import { Colors } from '@/constants/Colors';
 
 interface MenuItem {
   id: string;
@@ -117,7 +118,7 @@ export default function RestaurantScreen() {
         </ScrollView>
 
         {/* Menu Items */}
-        <ThemedView style={styles.menuContainer}>
+        <ThemedView style={styles.menuSection}>
           {filteredMenu.map((item) => (
             <TouchableOpacity key={item.id} style={styles.menuItem}>
               <ThemedView style={styles.menuItemContent}>
@@ -150,6 +151,7 @@ export default function RestaurantScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: Colors.background,
   },
   restaurantImage: {
     width: '100%',
@@ -157,31 +159,36 @@ const styles = StyleSheet.create({
   },
   restaurantInfo: {
     padding: 16,
-    gap: 8,
+    backgroundColor: Colors.restaurantBackground,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.peach,
   },
   restaurantCategory: {
-    fontSize: 14,
-    color: '#666',
+    color: Colors.textGray,
+    marginVertical: 4,
   },
   categoriesContainer: {
-    paddingHorizontal: 16,
-    marginVertical: 16,
+    padding: 16,
+    backgroundColor: Colors.restaurantBackground,
   },
   categoryButton: {
     paddingHorizontal: 16,
     paddingVertical: 8,
-    marginRight: 8,
+    backgroundColor: Colors.categoryBackground,
     borderRadius: 20,
-    backgroundColor: '#f0f0f0',
+    marginRight: 8,
   },
   selectedCategory: {
-    backgroundColor: '#000',
+    backgroundColor: Colors.orange,
   },
-  menuContainer: {
+  menuSection: {
     padding: 16,
+    backgroundColor: Colors.restaurantBackground,
   },
   menuItem: {
+    flexDirection: 'row',
     marginBottom: 16,
+    gap: 12,
   },
   menuItemContent: {
     flexDirection: 'row',
@@ -189,10 +196,9 @@ const styles = StyleSheet.create({
   },
   menuItemInfo: {
     flex: 1,
-    marginRight: 16,
   },
   menuItemDescription: {
-    color: '#666',
+    color: Colors.textGray,
     fontSize: 14,
     marginTop: 4,
   },
@@ -207,7 +213,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   menuItemOptions: {
-    color: '#666',
+    color: Colors.textGray,
     fontSize: 12,
     marginTop: 4,
     fontStyle: 'italic',

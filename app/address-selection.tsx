@@ -6,6 +6,7 @@ import * as Location from 'expo-location';
 
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
+import { Colors } from '@/constants/Colors';
 
 export default function AddressSelectionScreen() {
   const router = useRouter();
@@ -124,6 +125,7 @@ export default function AddressSelectionScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: Colors.background,
   },
   header: {
     flexDirection: 'row',
@@ -132,17 +134,19 @@ const styles = StyleSheet.create({
     padding: 16,
     paddingTop: 60,
     borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
+    borderBottomColor: Colors.peach,
+    backgroundColor: Colors.restaurantBackground,
   },
   searchContainer: {
     padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
+    borderBottomColor: Colors.peach,
+    backgroundColor: Colors.restaurantBackground,
   },
   searchBar: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#f8f8f8',
+    backgroundColor: Colors.background,
     borderRadius: 8,
     padding: 12,
     gap: 12,
@@ -150,6 +154,7 @@ const styles = StyleSheet.create({
   searchInput: {
     flex: 1,
     fontSize: 16,
+    color: Colors.text,
   },
   addressList: {
     flex: 1,
@@ -159,7 +164,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
+    borderBottomColor: Colors.peach,
+    backgroundColor: Colors.restaurantBackground,
     gap: 12,
   },
   addressInfo: {
@@ -167,6 +173,7 @@ const styles = StyleSheet.create({
   },
   addressText: {
     fontSize: 16,
+    color: Colors.text,
   },
   addAddressButton: {
     flexDirection: 'row',
@@ -174,10 +181,10 @@ const styles = StyleSheet.create({
     padding: 16,
     gap: 12,
     borderTopWidth: 1,
-    borderTopColor: '#f0f0f0',
+    borderTopColor: Colors.peach,
   },
   addAddressText: {
     fontSize: 16,
-    color: '#666',
+    color: Colors.textGray,
   },
 }); 

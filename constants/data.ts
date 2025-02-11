@@ -12,70 +12,11 @@ export interface Restaurant {
   isOpen: boolean;
   minimumOrder: number;
   menu: MenuItem[];
+  tags: string[];
 }
 
 export const POPULAR_RESTAURANTS: Restaurant[] = [
-  {
-    id: '1',
-    name: 'Le Petit Bistrot',
-    image: 'https://picsum.photos/200/200?random=1',
-    rating: 4.8,
-    deliveryTime: '15-25',
-    deliveryFee: '2.99',
-    category: 'Français',
-    priceCategory: '€€',
-    description: 'Une cuisine française authentique et raffinée',
-    address: '15 rue de la Paix, 75002 Paris',
-    isOpen: true,
-    minimumOrder: 15,
-    menu: [
-      {
-        id: '1',
-        name: 'Entrées',
-        category: 'starters',
-        description: 'Nos entrées signature',
-        price: 0,
-      },
-      {
-        id: '2',
-        name: 'Soupe à l\'Oignon',
-        category: 'starters',
-        description: 'Soupe traditionnelle avec croûtons et fromage gratiné',
-        price: 8.90,
-        image: 'https://images.unsplash.com/photo-1549396563-92fab230895a?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8M3x8c291cGUlMjAlQzMlQTAlMjBsJ29pZ25vbnxlbnwwfHwwfHx8MA%3D%3D',
-      },
-      {
-        id: '3',
-        name: 'Plats',
-        category: 'main',
-        description: 'Nos spécialités',
-        price: 0,
-      },
-      {
-        id: '4',
-        name: 'Coq au Vin',
-        category: 'main',
-        description: 'Poulet mijoté au vin rouge avec lardons et champignons',
-        price: 22.90,
-        image: 'https://picsum.photos/200/200?random=11',
-      },
-      {
-        id: '5',
-        name: 'Desserts',
-        category: 'desserts',
-        description: 'Nos desserts maison',
-        price: 0,
-      },
-      {
-        id: '6',
-        name: 'Crème Brûlée',
-        category: 'desserts',
-        description: 'Crème vanille avec caramel croustillant',
-        price: 7.90,
-        image: 'https://images.unsplash.com/photo-1615235739538-95040f341ba8?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8M3x8Y3IlQzMlQThtZSUyMGJydWwlQzMlQTl8ZW58MHx8MHx8fDA%3D',
-      },
-    ],
-  },
+  
   {
     id: '2',
     name: 'Sushi Master',
@@ -103,7 +44,7 @@ export const POPULAR_RESTAURANTS: Restaurant[] = [
         category: 'starters',
         description: 'Fèves de soja vapeur au sel de mer',
         price: 5.90,
-        image: 'https://plus.unsplash.com/premium_photo-1666318300348-a4d0226d81ad?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8NXx8RWRhbWFtZXxlbnwwfHwwfHx8MA%3D%3D',
+        image: 'https://picsum.photos/200/200?random=13',
       },
       {
         id: '3',
@@ -118,7 +59,7 @@ export const POPULAR_RESTAURANTS: Restaurant[] = [
         category: 'main',
         description: '24 pièces : sashimi, maki, nigiri',
         price: 32.90,
-        image: 'https://images.unsplash.com/photo-1553621042-f6e147245754?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTB8fHN1c2hpfGVufDB8fDB8fHww',
+        image: 'https://picsum.photos/200/200?random=14',
         options: [
           {
             name: 'Wasabi',
@@ -131,6 +72,7 @@ export const POPULAR_RESTAURANTS: Restaurant[] = [
         ],
       },
     ],
+    tags: ['Asian', 'Japanese'],
   },
   {
     id: '3',
@@ -146,6 +88,7 @@ export const POPULAR_RESTAURANTS: Restaurant[] = [
     isOpen: true,
     minimumOrder: 15,
     menu: [],
+    tags: ['Italian', 'Fast Food'],
   },
   {
     id: '4',
@@ -161,6 +104,7 @@ export const POPULAR_RESTAURANTS: Restaurant[] = [
     isOpen: true,
     minimumOrder: 15,
     menu: [],
+    tags: ['Fast Food', 'American'],
   },
   {
     id: '5',
@@ -176,6 +120,7 @@ export const POPULAR_RESTAURANTS: Restaurant[] = [
     isOpen: true,
     minimumOrder: 20,
     menu: [],
+    tags: ['Asian', 'Spicy'],
   },
   {
     id: '6',
@@ -191,6 +136,7 @@ export const POPULAR_RESTAURANTS: Restaurant[] = [
     isOpen: true,
     minimumOrder: 15,
     menu: [],
+    tags: ['Asian', 'Chinese'],
   },
   {
     id: '7',
@@ -206,6 +152,7 @@ export const POPULAR_RESTAURANTS: Restaurant[] = [
     isOpen: true,
     minimumOrder: 15,
     menu: [],
+    tags: ['Vegan', 'Healthy'],
   },
   {
     id: '8',
@@ -221,7 +168,262 @@ export const POPULAR_RESTAURANTS: Restaurant[] = [
     isOpen: true,
     minimumOrder: 20,
     menu: [],
+    tags: ['Oriental', 'Gourmet'],
   },
+  {
+    id: "9",
+    name: "The French Touch",
+    image: "https://picsum.photos/200/200?random=1",
+    rating: 4.8,
+    deliveryTime: "30-40",
+    category: "FastFood • French • Gourmet",
+    priceCategory: "€€",
+    description: "Des burgers à la française avec une touche gastronomique",
+    isOpen: true,
+    minimumOrder: 15,
+    menu: [
+      {
+        id: "1",
+        name: "Burgers",
+        category: "main",
+        description: "Nos burgers signature",
+        price: 0
+      },
+      {
+        id: "2",
+        name: "Burger Bleu",
+        category: "main",
+        description: "Steak haché, fromage bleu, oignons caramélisés",
+        price: 16.90,
+        image: "https://picsum.photos/200/200?random=2"
+      }
+    ],
+    deliveryFee: '2.99',
+    address: '123 rue Example, 75001 Paris',
+  },
+  {
+    id: "10",
+    name: "Black Bun Factory",
+    image: "https://picsum.photos/200/200?random=3",
+    rating: 4.9,
+    deliveryTime: "30-40",
+    category: "FastFood • Oriental Bun • Gourmet",
+    priceCategory: "€€",
+    description: "Burgers créatifs avec pains noirs artisanaux",
+    isOpen: true,
+    minimumOrder: 15,
+    menu: [
+      {
+        id: "1",
+        name: "Signatures",
+        category: "main",
+        description: "Nos créations exclusives",
+        price: 0
+      },
+      {
+        id: "2",
+        name: "Black Truffle",
+        category: "main",
+        description: "Pain noir, steak, truffe, roquette",
+        price: 18.90,
+        image: "https://picsum.photos/200/200?random=4"
+      }
+    ],
+    deliveryFee: '2.99',
+    address: '123 rue Example, 75001 Paris',
+  },
+  {
+    id: "12",
+    name: "Poke Bowl Bar",
+    image: "https://picsum.photos/200/200?random=5",
+    rating: 4.7,
+    deliveryTime: "15-20",
+    category: "FastFood • Végétarien • Healthy",
+    priceCategory: "€€",
+    description: "Burgers végétariens et options healthy",
+    isOpen: true,
+    minimumOrder: 12,
+    menu: [
+      {
+        id: "1",
+        name: "Veggie Burgers",
+        category: "main",
+        description: "Nos burgers végétariens",
+        price: 0
+      },
+      {
+        id: "2",
+        name: "Beyond Burger",
+        category: "main",
+        description: "Steak végétal, avocat, cheddar végétal",
+        price: 15.90,
+        image: "https://picsum.photos/200/200?random=6"
+      }
+    ],
+    deliveryFee: '2.99',
+    address: '123 rue Example, 75001 Paris',
+    tags: ['Healthy', 'Asian', 'Vegan'],
+  },
+  {
+    id: "13",
+    name: "Vegan Corner",
+    image: "https://picsum.photos/200/200?random=7",
+    rating: 4.4,
+    deliveryTime: "15-30",
+    category: "FastFood • Cheese Lovers • Vegan",
+    priceCategory: "€€",
+    description: "Le paradis des amateurs de fromage végétal",
+    isOpen: true,
+    minimumOrder: 10,
+    menu: [
+      {
+        id: "1",
+        name: "Burgers",
+        category: "main",
+        description: "Nos burgers fromagers",
+        price: 0
+      },
+      {
+        id: "2",
+        name: "Triple Cheese",
+        category: "main",
+        description: "Trois fromages différents végétaux, steak végétal double",
+        price: 17.90,
+        image: "https://picsum.photos/200/200?random=8"
+      }
+    ],
+    deliveryFee: '2.99',
+    address: '123 rue Example, 75001 Paris',
+    tags: ['Vegan', 'Fast Food'],
+  },
+  {
+    id: "14",
+    name: "Burger Palace",
+    image: "https://picsum.photos/200/200?random=9",
+    rating: 4.5,
+    deliveryTime: "20-30",
+    category: "FastFood • American • Burgers",
+    priceCategory: "€€",
+    description: "L'authentique burger américain",
+    isOpen: true,
+    minimumOrder: 12,
+    menu: [
+      {
+        id: "1",
+        name: "Classics",
+        category: "main",
+        description: "Nos burgers classiques",
+        price: 0
+      },
+      {
+        id: "2",
+        name: "Palace Burger",
+        category: "main",
+        description: "Le burger signature de la maison",
+        price: 16.90,
+        image: "https://picsum.photos/200/200?random=10"
+      }
+    ],
+    deliveryFee: '2.99',
+    address: '123 rue Example, 75001 Paris',
+    tags: ['Fast Food', 'American'],
+  },
+  {
+    id: "15",
+    name: "Smash & Grill",
+    image: "https://picsum.photos/200/200?random=11",
+    rating: 4.8,
+    deliveryTime: "20-30",
+    category: "FastFood • Grilled • Burgers",
+    priceCategory: "€€",
+    description: "Spécialiste du smash burger",
+    isOpen: true,
+    minimumOrder: 15,
+    menu: [
+      {
+        id: "1",
+        name: "Smash Burgers",
+        category: "main",
+        description: "Nos smash burgers signature",
+        price: 0
+      },
+      {
+        id: "2",
+        name: "Double Smash",
+        category: "main",
+        description: "Double viande smashée, cheddar fondant",
+        price: 15.90,
+        image: "https://picsum.photos/200/200?random=12"
+      }
+    ],
+    deliveryFee: '2.99',
+    address: '123 rue Example, 75001 Paris',
+    tags: ['Fast Food', 'American', 'Gourmet'],
+  },
+  {
+    id: "16",
+    name: "American Road House",
+    image: "https://picsum.photos/200/200?random=13",
+    rating: 4.3,
+    deliveryTime: "20-30",
+    category: "FastFood • American • Burgers",
+    priceCategory: "€€",
+    description: "L'esprit des diners américains",
+    isOpen: true,
+    minimumOrder: 10,
+    menu: [
+      {
+        id: "1",
+        name: "House Burgers",
+        category: "main",
+        description: "Nos burgers maison",
+        price: 0
+      },
+      {
+        id: "2",
+        name: "Road Trip Burger",
+        category: "main",
+        description: "Le burger qui vous fait voyager",
+        price: 14.90,
+        image: "https://picsum.photos/200/200?random=14"
+      }
+    ],
+    deliveryFee: '2.99',
+    address: '123 rue Example, 75001 Paris',
+    tags: ['Fast Food', 'American', 'Dessert'],
+  },
+  {
+    id: "17",
+    name: "Wild West Burgers",
+    image: "https://picsum.photos/200/200?random=15",
+    rating: 4.6,
+    deliveryTime: "20-30",
+    category: "FastFood • Western • BBQ",
+    priceCategory: "€€",
+    description: "L'authentique saveur du Far West",
+    isOpen: true,
+    minimumOrder: 15,
+    menu: [
+      {
+        id: "1",
+        name: "Western Specials",
+        category: "main",
+        description: "Nos spécialités western",
+        price: 0
+      },
+      {
+        id: "2",
+        name: "Rodeo Burger",
+        category: "main",
+        description: "Triple viande, sauce BBQ maison",
+        price: 19.90,
+        image: "https://picsum.photos/200/200?random=16"
+      }
+    ],
+    deliveryFee: '2.99',
+    address: '123 rue Example, 75001 Paris',
+    tags: ['Fast Food', 'American', 'BBQ'],
+  }
 ];
 
 export const MENU_CATEGORIES = [

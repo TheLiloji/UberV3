@@ -2,6 +2,8 @@ import { Image, StyleSheet, ScrollView, TextInput, View, TouchableOpacity } from
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useState, useEffect } from 'react';
+import { Text } from 'react-native';
+import { Colors } from '@/constants/Colors';
 
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
@@ -46,7 +48,10 @@ export default function HomeScreen() {
   };
 
   return (
-    <ThemedView style={styles.container}>
+    <ScrollView style={{
+      flex: 1,
+      backgroundColor: Colors.background,
+    }}>
       {/* En-tête avec localisation et barre de recherche */}
       <ThemedView style={styles.header}>
         {/* Barre de localisation */}
@@ -77,9 +82,24 @@ export default function HomeScreen() {
       </ThemedView>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+        {/* Categories */}
+        <View style={{
+          backgroundColor: Colors.categoryBackground,
+          padding: 16,
+          marginVertical: 8,
+          borderRadius: 8,
+        }}>
+          <Text style={{
+            color: Colors.text,
+            fontSize: 16,
+            fontWeight: '600',
+          }}>
+            Catégories
+          </Text>
+        </View>
+
         {/* Section des catégories */}
         <ThemedView style={styles.section}>
-          <ThemedText type="subtitle">Catégories</ThemedText>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.categoriesScroll}>
             {CATEGORIES.map((category) => (
               <TouchableOpacity key={category.id}>
@@ -91,6 +111,29 @@ export default function HomeScreen() {
             ))}
           </ScrollView>
         </ThemedView>
+
+        {/* Restaurants */}
+        <View style={{
+          backgroundColor: Colors.restaurantBackground,
+          padding: 16,
+          marginVertical: 8,
+          borderRadius: 8,
+        }}>
+          <Text style={{
+            color: Colors.text,
+            fontSize: 16,
+            fontWeight: '600',
+          }}>
+            Restaurants
+          </Text>
+          <Text style={{
+            color: Colors.textGray,
+            fontSize: 14,
+            marginTop: 4,
+          }}>
+            Description du restaurant
+          </Text>
+        </View>
 
         {/* Section des restaurants populaires */}
         <ThemedView style={styles.section}>
@@ -119,15 +162,17 @@ export default function HomeScreen() {
           ))}
         </ThemedView>
       </ScrollView>
-    </ThemedView>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: '#f1f1f1',
   },
   header: {
+    backgroundColor: '#ffffff',
     padding: 16,
     paddingTop: 60,
     borderBottomWidth: 1,
@@ -135,7 +180,7 @@ const styles = StyleSheet.create({
     gap: 16,
   },
   locationBar: {
-    backgroundColor: '#f8f8f8',
+    backgroundColor: '#ffe4b9',
     borderRadius: 8,
     padding: 12,
   },
@@ -149,23 +194,27 @@ const styles = StyleSheet.create({
   },
   locationLabel: {
     fontSize: 12,
-    color: '#666',
+    color: '#9b9c9c',
   },
   locationAddress: {
     fontSize: 16,
     fontWeight: '500',
+    color: '#2d2f2f',
   },
   searchBar: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#f8f8f8',
+    backgroundColor: '#ffffff',
     borderRadius: 8,
     padding: 12,
     gap: 12,
+    borderWidth: 1,
+    borderColor: '#f0f0f0',
   },
   searchInput: {
     flex: 1,
     fontSize: 16,
+    color: '#2d2f2f',
   },
   content: {
     flex: 1,
@@ -179,7 +228,7 @@ const styles = StyleSheet.create({
   },
   categoryCard: {
     alignItems: 'center',
-    backgroundColor: '#f8f8f8',
+    backgroundColor: '#ffe4b9',
     borderRadius: 12,
     padding: 16,
     marginRight: 12,
@@ -191,7 +240,7 @@ const styles = StyleSheet.create({
   },
   restaurantCard: {
     flexDirection: 'row',
-    backgroundColor: '#f8f8f8',
+    backgroundColor: '#ffffff',
     borderRadius: 12,
     marginBottom: 12,
     overflow: 'hidden',
@@ -206,7 +255,7 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   restaurantCategory: {
-    color: '#666',
+    color: '#9b9c9c',
     fontSize: 14,
   },
 });
