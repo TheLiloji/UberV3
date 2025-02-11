@@ -22,7 +22,7 @@ export default function TabLayout() {
         padding: 4,
       }}
     >
-      <Ionicons name="cart-outline" size={24} color="black" />
+      <Ionicons name="cart-outline" size={24} color="white" />
     </TouchableOpacity>
   );
 

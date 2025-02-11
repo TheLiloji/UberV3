@@ -1,6 +1,7 @@
 import { Image, StyleSheet, ScrollView, TextInput, View, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
+import { useState, useEffect } from 'react';
 
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
@@ -31,11 +32,41 @@ const CATEGORIES = [
 
 export default function HomeScreen() {
   const router = useRouter();
+  const { selectedAddress } = useLocalSearchParams();
+  const [address, setAddress] = useState(selectedAddress || 'Votre position actuelle');
+  
+  useEffect(() => {
+    if (selectedAddress) {
+      setAddress(selectedAddress.toString());
+    }
+  }, [selectedAddress]);
+
+  const handleLocationPress = () => {
+    router.push('/address-selection');
+  };
 
   return (
     <ThemedView style={styles.container}>
-      {/* En-tête avec barre de recherche */}
+      {/* En-tête avec localisation et barre de recherche */}
       <ThemedView style={styles.header}>
+        {/* Barre de localisation */}
+        <TouchableOpacity 
+          style={styles.locationBar}
+          onPress={handleLocationPress}
+        >
+          <ThemedView style={styles.locationContent}>
+            <Ionicons name="location-outline" size={24} color="black" />
+            <ThemedView style={styles.locationInfo}>
+              <ThemedText style={styles.locationLabel}>Livrer à</ThemedText>
+              <ThemedText style={styles.locationAddress} numberOfLines={1}>
+                {address}
+              </ThemedText>
+            </ThemedView>
+            <Ionicons name="chevron-down" size={24} color="black" />
+          </ThemedView>
+        </TouchableOpacity>
+
+        {/* Barre de recherche */}
         <ThemedView style={styles.searchBar}>
           <Ionicons name="search" size={24} color="#666" />
           <TextInput 
@@ -99,17 +130,41 @@ const styles = StyleSheet.create({
   header: {
     padding: 16,
     paddingTop: 60,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f0f0',
+    gap: 16,
+  },
+  locationBar: {
+    backgroundColor: '#f8f8f8',
+    borderRadius: 8,
+    padding: 12,
+  },
+  locationContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  locationInfo: {
+    flex: 1,
+  },
+  locationLabel: {
+    fontSize: 12,
+    color: '#666',
+  },
+  locationAddress: {
+    fontSize: 16,
+    fontWeight: '500',
   },
   searchBar: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#f0f0f0',
-    padding: 10,
+    backgroundColor: '#f8f8f8',
     borderRadius: 8,
+    padding: 12,
+    gap: 12,
   },
   searchInput: {
     flex: 1,
-    marginLeft: 10,
     fontSize: 16,
   },
   content: {
