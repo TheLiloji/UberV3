@@ -6,7 +6,7 @@ import * as Location from 'expo-location';
 
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
-import { Colors } from '@/constants/Colors';
+import Colors from '../constants/Colors';
 
 export default function AddressSelectionScreen() {
   const router = useRouter();

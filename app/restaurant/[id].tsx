@@ -190,22 +190,8 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     gap: 12,
   },
-  menuItemContent: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
   menuItemInfo: {
     flex: 1,
-  },
-  menuItemDescription: {
-    color: Colors.textGray,
-    fontSize: 14,
-    marginTop: 4,
-  },
-  menuItemPrice: {
-    marginTop: 8,
-    fontSize: 16,
-    fontWeight: 'bold',
   },
   menuItemImage: {
     width: 80,

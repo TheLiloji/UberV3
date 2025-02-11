@@ -4,7 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
-import { Colors } from '@/constants/Colors';
+import Colors from '../../constants/Colors';
 
 interface MenuOption {
   id: string;

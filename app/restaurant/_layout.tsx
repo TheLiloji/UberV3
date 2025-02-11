@@ -3,7 +3,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { TouchableOpacity } from 'react-native';
 
 import { POPULAR_RESTAURANTS } from '@/constants/data';
-import { Colors } from '@/constants/Colors';
+import Colors from '../../constants/Colors';
 
 export default function RestaurantLayout() {
   const { id } = useGlobalSearchParams();

@@ -7,11 +7,9 @@ import { Ionicons } from '@expo/vector-icons';
 import { HapticTab } from '@/components/HapticTab';
 import { IconSymbol } from '@/components/ui/IconSymbol';
 import TabBarBackground from '@/components/ui/TabBarBackground';
-import { Colors } from '@/constants/Colors';
-import { useColorScheme } from '@/hooks/useColorScheme';
+import Colors from '../../constants/Colors';
 
 export default function TabLayout() {
-  const colorScheme = useColorScheme();
   const router = useRouter();
 
   const CartButton = () => (
@@ -34,12 +32,19 @@ export default function TabLayout() {
         tabBarButton: HapticTab,
         tabBarBackground: TabBarBackground,
         headerRight: () => <CartButton />,
-        tabBarStyle: Platform.select({
-          ios: {
-            position: 'absolute',
-          },
-          default: {},
-        }),
+        headerStyle: {
+          backgroundColor: Colors.restaurantBackground,
+        },
+        headerTintColor: Colors.text,
+        tabBarStyle: {
+          ...Platform.select({
+            ios: {
+              position: 'absolute',
+            },
+            default: {},
+          }),
+          backgroundColor: Colors.restaurantBackground,
+        },
       }}>
       <Tabs.Screen
         name="index"

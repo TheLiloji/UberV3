@@ -6,7 +6,19 @@ import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 import 'react-native-reanimated';
 
-import { Colors } from '@/constants/Colors';
+import Colors from '../constants/Colors';
+
+// Mise à jour du thème par défaut pour forcer les couleurs claires
+const theme = {
+  ...DefaultTheme,
+  colors: {
+    ...DefaultTheme.colors,
+    background: Colors.background,
+    text: Colors.text,
+    border: Colors.peach,
+    primary: Colors.orange,
+  },
+};
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
@@ -27,22 +39,19 @@ export default function RootLayout() {
   }
 
   return (
-    <ThemeProvider value={DefaultTheme}>
-      <Stack screenOptions={{ headerShown: false }}>
-        <Stack.Screen 
-          name="(tabs)" 
-          options={{
-            headerShown: false,
-            contentStyle: {
-              backgroundColor: Colors.background
-            }
-          }}
-        />
-        <Stack.Screen name="restaurant" options={{ headerShown: false }} />
-        <Stack.Screen name="address-selection" options={{ headerShown: false }} />
-        <Stack.Screen name="+not-found" options={{ headerShown: false }} />
+    <ThemeProvider value={theme}>
+      <Stack screenOptions={{ 
+        headerShown: false,
+        contentStyle: {
+          backgroundColor: Colors.background
+        },
+      }}>
+        <Stack.Screen name="(tabs)" />
+        <Stack.Screen name="restaurant" />
+        <Stack.Screen name="address-selection" />
+        <Stack.Screen name="+not-found" />
       </Stack>
-      <StatusBar style="dark" />
+      <StatusBar style="dark" backgroundColor={Colors.background} />
     </ThemeProvider>
   );
 }
