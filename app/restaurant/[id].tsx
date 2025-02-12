@@ -55,7 +55,7 @@ export default function RestaurantScreen() {
   const router = useRouter();
   const [selectedCategory, setSelectedCategory] = useState('all');
 
-  const restaurant = POPULAR_RESTAURANTS.find(r => r.id === id);
+  const restaurant = POPULAR_RESTAURANTS.find(r => r.id === Number(id));
 
   if (!restaurant) {
     return (

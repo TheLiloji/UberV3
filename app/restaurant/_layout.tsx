@@ -8,7 +8,7 @@ export default function RestaurantLayout() {
   const { id } = useGlobalSearchParams();
   const router = useRouter();
   
-  const restaurant = POPULAR_RESTAURANTS.find(r => r.id === id);
+  const restaurant = POPULAR_RESTAURANTS.find(r => r.id === Number(id));
   const restaurantName = restaurant?.name || 'Restaurant';
 
   const CartButton = () => (
