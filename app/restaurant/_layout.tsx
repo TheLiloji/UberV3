@@ -16,9 +16,9 @@ export default function RestaurantLayout() {
           title: restaurantName,
           headerShadowVisible: false,
           headerStyle: {
-            backgroundColor: 'black',
+            backgroundColor: 'white',
           },
-          headerTintColor: 'white',
+          headerTintColor: '#000',
         }}
       />
     </Stack>
