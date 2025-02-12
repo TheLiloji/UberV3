@@ -6,6 +6,7 @@ import { useState, useEffect } from 'react';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { POPULAR_RESTAURANTS } from '@/constants/data';
+import { theme } from '@/constants/theme';
 
 const CATEGORIES = [
   {
@@ -84,12 +85,20 @@ const CATEGORIES = [
     type: 'category',
     tag: 'dessert',
   },
+  {
+    id: '11',
+    name: 'Petit Prix',
+    image: 'https://i.imgur.com/YZJ8Gzr.png',
+    type: 'category',
+    tag: 'lowbudget',
+  },
 ];
 
 export default function HomeScreen() {
   const router = useRouter();
   const { selectedAddress } = useLocalSearchParams();
   const [address, setAddress] = useState(selectedAddress || 'Sélectionnez votre position actuelle');
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   
   useEffect(() => {
     if (selectedAddress) {
@@ -101,10 +110,29 @@ export default function HomeScreen() {
     router.push('/address-selection');
   };
 
-  // Tri et filtrage des restaurants
-  const topRestaurants = POPULAR_RESTAURANTS
-    .sort((a, b) => b.rating - a.rating) // Tri par note décroissante
-    .slice(0, 8); // Garde uniquement les 8 premiers
+  const handleCategoryPress = (categoryTag: string) => {
+    if (selectedCategory === categoryTag) {
+      setSelectedCategory(null);
+    } else {
+      setSelectedCategory(categoryTag);
+    }
+  };
+
+  const filteredRestaurants = POPULAR_RESTAURANTS
+    .filter(restaurant => {
+      if (selectedCategory === null) {
+        return true;
+      }
+      if (selectedCategory === 'all') {
+        return true;
+      }
+      if (selectedCategory === 'lowbudget') {
+        return restaurant.priceCategory === '€';
+      }
+      return restaurant.tags.includes(selectedCategory);
+    })
+    .sort((a, b) => b.rating - a.rating)
+    .slice(0, selectedCategory === null ? 8 : undefined);
 
   return (
     <ThemedView style={styles.container}>
@@ -127,42 +155,71 @@ export default function HomeScreen() {
 
       <ScrollView style={styles.scrollContent} showsVerticalScrollIndicator={false}>
         {/* En-tête avec image et barre de recherche */}
-        <ThemedView style={styles.scrollHeader}>
-          <ImageBackground 
-            source={{ uri: 'https://i.imgur.com/dgyZrhd.png' }}
-            style={styles.headerImage}
-            resizeMode="cover"
-          >
-            <ThemedText style={styles.appTitle}>OpenEatSource</ThemedText>
-          </ImageBackground>
+        {selectedCategory === null ? (
+          <ThemedView style={styles.scrollHeader}>
+            <ImageBackground 
+              source={{ uri: 'https://i.imgur.com/dgyZrhd.png' }}
+              style={styles.headerImage}
+              resizeMode="cover"
+            >
+              <ThemedText style={styles.appTitle}>OpenEatSource</ThemedText>
+            </ImageBackground>
 
-          {/* Barre de recherche */}
-          <ThemedView style={styles.searchBar}>
-            <Ionicons name="search" size={24} color="#666" />
-            <TextInput 
-              placeholder="Rechercher un restaurant ou un plat"
-              style={styles.searchInput}
-            />
+            <ThemedView style={styles.searchBar}>
+              <Ionicons name="search" size={24} color="#666" />
+              <TextInput 
+                placeholder="Rechercher un restaurant ou un plat"
+                style={styles.searchInput}
+              />
+            </ThemedView>
           </ThemedView>
-        </ThemedView>
+        ) : (
+          <ThemedView style={styles.searchBarContainer}>
+            <ThemedView style={styles.searchBar}>
+              <Ionicons name="search" size={24} color="#666" />
+              <TextInput 
+                placeholder="Rechercher un restaurant ou un plat"
+                style={styles.searchInput}
+              />
+            </ThemedView>
+          </ThemedView>
+        )}
 
         {/* Section des catégories */}
         <ThemedView style={styles.section}>
           <ThemedText type="subtitle">Catégories</ThemedText>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.categoriesScroll}>
             {CATEGORIES.map((category) => (
-              <TouchableOpacity key={category.id}>
+              <TouchableOpacity 
+                key={category.id}
+                onPress={() => handleCategoryPress(category.tag)}
+              >
                 {category.type === 'button' ? (
-                  <ThemedView style={styles.allCategoryButton}>
-                    <ThemedText style={styles.allCategoryText}>{category.name}</ThemedText>
+                  <ThemedView style={[
+                    styles.allCategoryButton,
+                    selectedCategory === category.tag && styles.selectedAllCategoryButton
+                  ]}>
+                    <ThemedText style={[
+                      styles.allCategoryText,
+                      selectedCategory === category.tag && styles.selectedAllCategoryText
+                    ]}>{category.name}</ThemedText>
                   </ThemedView>
                 ) : (
-                  <ThemedView style={styles.categoryCard}>
+                  <ThemedView style={[
+                    styles.categoryCard,
+                    selectedCategory === category.tag && styles.selectedCategoryCard
+                  ]}>
                     <Image 
                       source={{ uri: category.image }} 
-                      style={styles.categoryImage}
+                      style={[
+                        styles.categoryImage,
+                        selectedCategory === category.tag && styles.selectedCategoryImage
+                      ]}
                     />
-                    <ThemedText style={styles.categoryText}>{category.name}</ThemedText>
+                    <ThemedText style={[
+                      styles.categoryText,
+                      selectedCategory === category.tag && styles.selectedCategoryText
+                    ]}>{category.name}</ThemedText>
                   </ThemedView>
                 )}
               </TouchableOpacity>
@@ -170,40 +227,59 @@ export default function HomeScreen() {
           </ScrollView>
         </ThemedView>
 
-        {/* Section des restaurants populaires */}
+        {/* Section des restaurants */}
         <ThemedView style={styles.section}>
-          <ThemedText type="subtitle">Les 8 meilleurs restaurants</ThemedText>
+          <ThemedText type="subtitle">
+            {selectedCategory === null 
+              ? 'Les 8 meilleurs restaurants'
+              : selectedCategory === 'all'
+                ? 'Tous les restaurants'
+                : `Restaurants ${CATEGORIES.find(cat => cat.tag === selectedCategory)?.name}`}
+          </ThemedText>
           <ThemedView style={styles.restaurantsGrid}>
-            {topRestaurants.map((restaurant) => (
-              <TouchableOpacity 
-                key={restaurant.id} 
-                style={styles.restaurantWrapper}
-                onPress={() => router.push(`/restaurant/${restaurant.id}`)}
-              >
-                <ThemedView style={styles.restaurantCard}>
-                  <Image 
-                    source={{ uri: restaurant.image }}
-                    style={styles.restaurantImage}
-                  />
-                  <ThemedView style={styles.restaurantInfo}>
-                    <ThemedText type="defaultSemiBold" style={styles.restaurantName}>
-                      {restaurant.name}
-                    </ThemedText>
-                    <ThemedView style={styles.restaurantDetails}>
-                      <ThemedText style={styles.restaurantRating}>
-                        ⭐ {restaurant.rating}
+            {filteredRestaurants.length > 0 ? (
+              filteredRestaurants.map((restaurant) => (
+                <TouchableOpacity 
+                  key={restaurant.id} 
+                  style={styles.restaurantWrapper}
+                  onPress={() => router.push(`/restaurant/${restaurant.id}`)}
+                >
+                  <ThemedView style={styles.restaurantCard}>
+                    <View style={styles.imageContainer}>
+                      <Image 
+                        source={{ uri: restaurant.image }}
+                        style={styles.restaurantImage}
+                      />
+                      <View style={styles.ratingBadge}>
+                        <ThemedText style={styles.ratingText}>
+                          ★ {restaurant.rating}
+                        </ThemedText>
+                      </View>
+                    </View>
+                    <ThemedView style={styles.restaurantInfo}>
+                      <ThemedText type="defaultSemiBold" style={styles.restaurantName}>
+                        {restaurant.name}
                       </ThemedText>
+                      <ThemedView style={styles.restaurantDetails}>
+                        <ThemedText style={styles.restaurantDelivery}>
+                          {restaurant.deliveryTime} min
+                        </ThemedText>
+                        <ThemedText style={styles.restaurantPrice}>
+                          {restaurant.priceCategory}
+                        </ThemedText>
+                      </ThemedView>
                       <ThemedText style={styles.restaurantCategory}>
                         {restaurant.category}
                       </ThemedText>
                     </ThemedView>
-                    <ThemedText style={styles.restaurantDelivery}>
-                      {restaurant.deliveryTime} min
-                    </ThemedText>
                   </ThemedView>
-                </ThemedView>
-              </TouchableOpacity>
-            ))}
+                </TouchableOpacity>
+              ))
+            ) : (
+              <ThemedText style={styles.noRestaurantsText}>
+                Aucun restaurant trouvé dans cette catégorie
+              </ThemedText>
+            )}
           </ThemedView>
         </ThemedView>
       </ScrollView>
@@ -217,6 +293,7 @@ const styles = StyleSheet.create({
   },
   fixedLocationBar: {
     padding: 12,
+    paddingTop: 60,
     backgroundColor: 'white',
     borderBottomWidth: 1,
     borderBottomColor: '#f0f0f0',
@@ -278,15 +355,32 @@ const styles = StyleSheet.create({
     padding: 16,
     marginRight: 12,
     width: 100,
+    height: 100,
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: 'transparent',
+  },
+  selectedCategoryCard: {
+    borderColor: theme.colors.primary,
+    backgroundColor: '#ffe5b9',
   },
   categoryImage: {
     width: 40,
     height: 40,
     marginBottom: 8,
   },
+  selectedCategoryImage: {
+    opacity: 0.8,
+  },
   categoryText: {
-    color: '#2d2f2f',
     fontSize: 14,
+    textAlign: 'center',
+    marginTop: 4,
+    color: '#2d2f2f',
+  },
+  selectedCategoryText: {
+    color: theme.colors.primary,
+    fontWeight: 'bold',
   },
   restaurantsGrid: {
     flexDirection: 'row',
@@ -308,10 +402,27 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
   },
+  imageContainer: {
+    position: 'relative',
+  },
   restaurantImage: {
     width: '100%',
     height: 120,
     resizeMode: 'cover',
+  },
+  ratingBadge: {
+    position: 'absolute',
+    top: 8,
+    left: 8,
+    backgroundColor: '#ffe5b9',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+  },
+  ratingText: {
+    color: '#000',
+    fontWeight: 'bold',
+    fontSize: 14,
   },
   restaurantInfo: {
     padding: 12,
@@ -324,19 +435,23 @@ const styles = StyleSheet.create({
   restaurantDetails: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 4,
-  },
-  restaurantRating: {
-    fontSize: 12,
-    marginRight: 8,
-  },
-  restaurantCategory: {
-    fontSize: 12,
-    color: '#666',
+    marginTop: 8,
+    gap: 12,
   },
   restaurantDelivery: {
-    fontSize: 12,
-    color: '#666',
+    fontSize: 14,
+    color: theme.colors.textSecondary,
+    fontWeight: '500',
+  },
+  restaurantPrice: {
+    fontSize: 14,
+    color: theme.colors.textSecondary,
+    fontWeight: '500',
+  },
+  restaurantCategory: {
+    fontSize: 14,
+    color: theme.colors.textSecondary,
+    marginTop: 4,
   },
   allCategoryButton: {
     alignItems: 'center',
@@ -347,14 +462,21 @@ const styles = StyleSheet.create({
     width: 100,
     height: 100,
     justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: 'transparent',
   },
   allCategoryText: {
     color: '#2d2f2f',
     fontSize: 16,
+    fontWeight: '500',
+  },
+  selectedAllCategoryButton: {
+    borderColor: theme.colors.primary,
+    backgroundColor: '#ffe5b9',
+  },
+  selectedAllCategoryText: {
+    color: theme.colors.primary,
     fontWeight: 'bold',
-    textShadowColor: '#ffe5b9',
-    textShadowOffset: { width: 1, height: 1 },
-    textShadowRadius: 5,
   },
   headerImage: {
     width: '100vw',
@@ -381,5 +503,18 @@ const styles = StyleSheet.create({
     includeFontPadding: false,
     textAlignVertical: 'center',
     lineHeight: 48,
+  },
+  selectedCategoryButton: {
+    backgroundColor: theme.colors.primary,
+  },
+  searchBarContainer: {
+    padding: 16,
+    paddingTop: 16,
+  },
+  noRestaurantsText: {
+    textAlign: 'center',
+    color: theme.colors.textSecondary,
+    padding: theme.spacing.md,
+    width: '100%',
   },
 });

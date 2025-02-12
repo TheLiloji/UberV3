@@ -1,8 +1,6 @@
 import { Tabs } from 'expo-router';
 import React from 'react';
-import { Platform, TouchableOpacity } from 'react-native';
-import { useRouter } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
+import { Platform } from 'react-native';
 
 import { HapticTab } from '@/components/HapticTab';
 import { IconSymbol } from '@/components/ui/IconSymbol';
@@ -12,28 +10,14 @@ import { useColorScheme } from '@/hooks/useColorScheme';
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
-  const router = useRouter();
-
-  const CartButton = () => (
-    <TouchableOpacity 
-      onPress={() => router.push('/cart')}
-      style={{ 
-        marginRight: 16,
-        padding: 4,
-      }}
-    >
-      <Ionicons name="cart-outline" size={24} color="white" />
-    </TouchableOpacity>
-  );
 
   return (
     <Tabs
       screenOptions={{
         tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
-        headerShown: true,
+        headerShown: false,
         tabBarButton: HapticTab,
         tabBarBackground: TabBarBackground,
-        headerRight: () => <CartButton />,
         tabBarStyle: Platform.select({
           ios: {
             position: 'absolute',
