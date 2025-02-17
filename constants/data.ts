@@ -32,14 +32,14 @@ export const POPULAR_RESTAURANTS: Restaurant[] = [
     minimumOrder: 20,
     menu: [
       {
-        id: 1,
+        id: "1-1",
         name: "Entrées",
         category: "Entrées",
         description: "Nos entrées japonaises",
         price: 0
       },
       {
-        id: 2,
+        id: "1-2",
         name: "Edamame",
         category: "Entrées",
         description: "Fèves de soja vapeur au sel de mer",
@@ -47,7 +47,7 @@ export const POPULAR_RESTAURANTS: Restaurant[] = [
         image: "https://picsum.photos/200/200?random=2"
       },
       {
-        id: 3,
+        id: "1-3",
         name: "Gyoza",
         category: "Entrées",
         description: "Raviolis japonais grillés aux légumes",
@@ -55,14 +55,14 @@ export const POPULAR_RESTAURANTS: Restaurant[] = [
         image: "https://picsum.photos/200/200?random=3"
       },
       {
-        id: 4,
+        id: "1-4",
         name: "Sushis",
         category: "Plats",
         description: "Nos sushis signature",
         price: 0
       },
       {
-        id: 5,
+        id: "1-5",
         name: "Plateau Royal",
         category: "Plats",
         description: "24 pièces : sashimi, maki, nigiri",
@@ -97,14 +97,14 @@ export const POPULAR_RESTAURANTS: Restaurant[] = [
     minimumOrder: 15,
     menu: [
       {
-        id: 1,
+        id: "2-1",
         name: "Antipasti",
         category: "Entrées",
         description: "Nos entrées italiennes",
         price: 0
       },
       {
-        id: 2,
+        id: "2-2",
         name: "Bruschetta",
         category: "Entrées",
         description: "Pain grillé, tomates, basilic, huile d'olive",
@@ -112,14 +112,14 @@ export const POPULAR_RESTAURANTS: Restaurant[] = [
         image: "https://picsum.photos/200/200?random=6"
       },
       {
-        id: 3,
+        id: "2-3",
         name: "Pizzas",
         category: "Plats",
         description: "Nos pizzas artisanales",
         price: 0
       },
       {
-        id: 4,
+        id: "2-4",
         name: "Margherita",
         category: "Plats",
         description: "Sauce tomate, mozzarella, basilic frais",
@@ -153,14 +153,14 @@ export const POPULAR_RESTAURANTS: Restaurant[] = [
     minimumOrder: 15,
     menu: [
       {
-        id: 1,
+        id: "3-1",
         name: "Bowls",
         category: "Plats",
         description: "Nos bowls healthy",
         price: 0
       },
       {
-        id: 2,
+        id: "3-2",
         name: "Buddha Bowl",
         category: "Plats",
         description: "Quinoa, avocat, pois chiches, légumes de saison",
@@ -177,14 +177,14 @@ export const POPULAR_RESTAURANTS: Restaurant[] = [
         ]
       },
       {
-        id: 3,
+        id: "3-3",
         name: "Desserts",
         category: "Desserts",
         description: "Nos desserts vegan",
         price: 0
       },
       {
-        id: 4,
+        id: "3-4",
         name: "Cheesecake",
         category: "Desserts",
         description: "Cheesecake végétal aux fruits rouges",
@@ -209,14 +209,14 @@ export const POPULAR_RESTAURANTS: Restaurant[] = [
     minimumOrder: 25,
     menu: [
       {
-        id: 1,
+        id: "4-1",
         name: "Entrées",
         category: "Entrées",
         description: "Les classiques de la gastronomie française",
         price: 0
       },
       {
-        id: 2,
+        id: "4-2",
         name: "Foie Gras Maison",
         category: "Entrées",
         description: "Foie gras mi-cuit, chutney de figues, pain brioché",
@@ -224,14 +224,14 @@ export const POPULAR_RESTAURANTS: Restaurant[] = [
         image: "https://picsum.photos/200/200?random=21"
       },
       {
-        id: 3,
+        id: "4-3",
         name: "Plats",
         category: "Plats",
         description: "Nos spécialités",
         price: 0
       },
       {
-        id: 4,
+        id: "4-4",
         name: "Coq au Vin",
         category: "Plats",
         description: "Coq mijoté au vin rouge, lardons, champignons",
@@ -265,14 +265,14 @@ export const POPULAR_RESTAURANTS: Restaurant[] = [
     minimumOrder: 20,
     menu: [
       {
-        id: 1,
+        id: "5-1",
         name: "Entrées",
         category: "Entrées",
         description: "Nos entrées épicées",
         price: 0
       },
       {
-        id: 2,
+        id: "5-2",
         name: "Pakoras Mix",
         category: "Entrées",
         description: "Assortiment de légumes frits aux épices",
@@ -280,14 +280,14 @@ export const POPULAR_RESTAURANTS: Restaurant[] = [
         image: "https://picsum.photos/200/200?random=24"
       },
       {
-        id: 3,
+        id: "5-3",
         name: "Plats",
         category: "Plats",
         description: "Nos currys maison",
         price: 0
       },
       {
-        id: 4,
+        id: "5-4",
         name: "Dal Makhani",
         category: "Plats",
         description: "Lentilles noires mijotées, sauce crémeuse",
@@ -322,14 +322,14 @@ export const POPULAR_RESTAURANTS: Restaurant[] = [
     minimumOrder: 15,
     menu: [
       {
-        id: 1,
+        id: "6-1",
         name: "Desserts Classiques",
         category: "Desserts",
         description: "Nos desserts signatures",
         price: 0
       },
       {
-        id: 2,
+        id: "6-2",
         name: "Moelleux au Chocolat",
         category: "Desserts",
         description: "Cœur coulant au chocolat noir, glace vanille",
@@ -346,14 +346,14 @@ export const POPULAR_RESTAURANTS: Restaurant[] = [
         ]
       },
       {
-        id: 3,
+        id: "6-3",
         name: "Boissons",
         category: "Drinks",
         description: "Nos boissons maison",
         price: 0
       },
       {
-        id: 4,
+        id: "6-4",
         name: "Milkshake",
         category: "Drinks",
         description: "Milkshake crémeux",
@@ -388,14 +388,14 @@ export const POPULAR_RESTAURANTS: Restaurant[] = [
     minimumOrder: 12,
     menu: [
       {
-        id: 1,
+        id: "7-1",
         name: "Nos Burgers",
         category: "Burgers",
         description: "Burgers signature",
         price: 0
       },
       {
-        id: 2,
+        id: "7-2",
         name: "Classic Cheese",
         category: "Burgers",
         description: "Bœuf, cheddar, salade, tomate, oignon, sauce maison",
@@ -420,14 +420,14 @@ export const POPULAR_RESTAURANTS: Restaurant[] = [
         ]
       },
       {
-        id: 3,
+        id: "7-3",
         name: "Accompagnements",
         category: "Sides",
         description: "Nos sides maison",
         price: 0
       },
       {
-        id: 4,
+        id: "7-4",
         name: "Frites Maison",
         category: "Sides",
         description: "Frites fraîches, sel aux herbes",
@@ -462,14 +462,14 @@ export const POPULAR_RESTAURANTS: Restaurant[] = [
     minimumOrder: 18,
     menu: [
       {
-        id: 1,
+        id: "8-1",
         name: "Mezze",
         category: "Entrées",
         description: "Nos mezze traditionnels",
         price: 0
       },
       {
-        id: 2,
+        id: "8-2",
         name: "Plateau Mezze",
         category: "Entrées",
         description: "Houmous, moutabal, taboulé, falafel",
@@ -486,14 +486,14 @@ export const POPULAR_RESTAURANTS: Restaurant[] = [
         ]
       },
       {
-        id: 3,
+        id: "8-3",
         name: "Grillades",
         category: "Plats",
         description: "Nos grillades signature",
         price: 0
       },
       {
-        id: 4,
+        id: "8-4",
         name: "Mixed Grill",
         category: "Plats",
         description: "Assortiment de viandes grillées, riz aux vermicelles",
@@ -518,14 +518,14 @@ export const POPULAR_RESTAURANTS: Restaurant[] = [
     minimumOrder: 15,
     menu: [
       {
-        id: 1,
+        id: "9-1",
         name: "Nos Bowls",
         category: "Bowls",
         description: "Bowls équilibrés et savoureux",
         price: 0
       },
       {
-        id: 2,
+        id: "9-2",
         name: "Super Green Bowl",
         category: "Bowls",
         description: "Quinoa, avocat, épinards, edamame, graines",
@@ -568,14 +568,14 @@ export const POPULAR_RESTAURANTS: Restaurant[] = [
     minimumOrder: 10,
     menu: [
       {
-        id: 1,
+        id: "10-1",
         name: "Bubble Tea",
         category: "Drinks",
         description: "Nos bubble teas signature",
         price: 0
       },
       {
-        id: 2,
+        id: "10-2",
         name: "Classic Milk Tea",
         category: "Drinks",
         description: "Thé noir, lait, perles de tapioca",
@@ -601,14 +601,14 @@ export const POPULAR_RESTAURANTS: Restaurant[] = [
         ]
       },
       {
-        id: 3,
+        id: "10-3",
         name: "Desserts",
         category: "Desserts",
         description: "Nos desserts asiatiques",
         price: 0
       },
       {
-        id: 4,
+        id: "10-4",
         name: "Mochi Mix",
         category: "Desserts",
         description: "Assortiment de 3 mochis",
@@ -633,14 +633,14 @@ export const POPULAR_RESTAURANTS: Restaurant[] = [
     minimumOrder: 12,
     menu: [
       {
-        id: 1,
+        id: "11-1",
         name: "Pâtes",
         category: "Plats",
         description: "Nos pâtes fraîches",
         price: 0
       },
       {
-        id: 2,
+        id: "11-2",
         name: "Carbonara",
         category: "Plats",
         description: "Pâtes fraîches, crème, lardons, œuf, parmesan",
@@ -665,14 +665,14 @@ export const POPULAR_RESTAURANTS: Restaurant[] = [
         ]
       },
       {
-        id: 3,
+        id: "11-3",
         name: "Desserts",
         category: "Desserts",
         description: "Nos desserts italiens",
         price: 0
       },
       {
-        id: 4,
+        id: "11-4",
         name: "Tiramisu",
         category: "Desserts",
         description: "Tiramisu traditionnel au café",
@@ -697,14 +697,14 @@ export const POPULAR_RESTAURANTS: Restaurant[] = [
     minimumOrder: 15,
     menu: [
       {
-        id: 1,
+        id: "12-1",
         name: "Bao Buns",
         category: "Entrées",
         description: "Nos bao buns moelleux",
         price: 0
       },
       {
-        id: 2,
+        id: "12-2",
         name: "Bao Porc Caramélisé",
         category: "Entrées",
         description: "Porc mijoté, concombre mariné, cacahuètes",
@@ -721,14 +721,14 @@ export const POPULAR_RESTAURANTS: Restaurant[] = [
         ]
       },
       {
-        id: 3,
+        id: "12-3",
         name: "Plats",
         category: "Plats",
         description: "Nos spécialités",
         price: 0
       },
       {
-        id: 4,
+        id: "12-4",
         name: "Pad Thai",
         category: "Plats",
         description: "Nouilles de riz sautées aux légumes et cacahuètes",
@@ -763,14 +763,14 @@ export const POPULAR_RESTAURANTS: Restaurant[] = [
     minimumOrder: 20,
     menu: [
       {
-        id: 1,
+        id: "13-1",
         name: "Entrées Provençales",
         category: "Entrées",
         description: "Nos entrées du Sud",
         price: 0
       },
       {
-        id: 2,
+        id: "13-2",
         name: "Tapenade & Crudités",
         category: "Entrées",
         description: "Assortiment de tapenades maison et légumes frais",
@@ -778,14 +778,14 @@ export const POPULAR_RESTAURANTS: Restaurant[] = [
         image: "https://picsum.photos/200/200?random=64"
       },
       {
-        id: 3,
+        id: "13-3",
         name: "Plats",
         category: "Plats",
         description: "Nos spécialités provençales",
         price: 0
       },
       {
-        id: 4,
+        id: "13-4",
         name: "Ratatouille",
         category: "Plats",
         description: "Légumes du soleil mijotés à l'huile d'olive",
@@ -819,14 +819,14 @@ export const POPULAR_RESTAURANTS: Restaurant[] = [
     minimumOrder: 12,
     menu: [
       {
-        id: 1,
+        id: "14-1",
         name: "Boissons Chaudes",
         category: "Drinks",
         description: "Nos cafés et chocolats chauds",
         price: 0
       },
       {
-        id: 2,
+        id: "14-2",
         name: "Latte Artisanal",
         category: "Drinks",
         description: "Café signature avec lait mousseux",
@@ -852,14 +852,14 @@ export const POPULAR_RESTAURANTS: Restaurant[] = [
         ]
       },
       {
-        id: 3,
+        id: "14-3",
         name: "Pâtisseries",
         category: "Desserts",
         description: "Nos pâtisseries maison",
         price: 0
       },
       {
-        id: 4,
+        id: "14-4",
         name: "Carrot Cake",
         category: "Desserts",
         description: "Gâteau aux carottes, cream cheese, noix",
@@ -884,14 +884,14 @@ export const POPULAR_RESTAURANTS: Restaurant[] = [
     minimumOrder: 15,
     menu: [
       {
-        id: 1,
+        id: "15-1",
         name: "Salades",
         category: "Entrées",
         description: "Nos salades composées",
         price: 0
       },
       {
-        id: 2,
+        id: "15-2",
         name: "Super Kale",
         category: "Entrées",
         description: "Kale, avocat, grenade, graines de courge",
@@ -908,14 +908,14 @@ export const POPULAR_RESTAURANTS: Restaurant[] = [
         ]
       },
       {
-        id: 3,
+        id: "15-3",
         name: "Burgers Vegan",
         category: "Plats",
         description: "Nos burgers végétaux",
         price: 0
       },
       {
-        id: 4,
+        id: "15-4",
         name: "Beyond Burger",
         category: "Plats",
         description: "Steak végétal, cheddar végétal, sauce spéciale",
@@ -945,12 +945,12 @@ export const MENU_CATEGORIES = [
 ];
 
 export interface MenuItem {
-  id: number;
+  id: string;
   name: string;
+  category: string;
   description: string;
   price: number;
   image?: string;
-  category: string;
   options?: {
     name: string;
     choices: {
@@ -959,4 +959,4 @@ export interface MenuItem {
       price: number;
     }[];
   }[];
-};
+}

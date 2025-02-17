@@ -1,9 +1,8 @@
 import { DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { useFonts } from 'expo-font';
 import { Stack, useRouter, usePathname } from 'expo-router';
-import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { TouchableOpacity, StyleSheet, View, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import 'react-native-reanimated';
@@ -12,26 +11,48 @@ import { useColorScheme } from '@/hooks/useColorScheme';
 import { theme } from '@/constants/theme';
 import { ThemedText } from '@/components/ThemedText';
 import { CartProvider, useCart } from '@/contexts/CartContext';
-
-// Prevent the splash screen from auto-hiding before asset loading is complete.
-SplashScreen.preventAutoHideAsync();
+import { UIProvider, useUI } from '@/contexts/UIContext';
+import { CustomSplash } from '@/components/CustomSplash';
 
 // Créer un composant séparé pour le bouton panier
 function CartButton() {
   const router = useRouter();
   const pathname = usePathname();
-  const isInRestaurant = pathname.startsWith('/restaurant/');
-  const isInCart = pathname === '/cart';
   const { getCount, getTotal } = useCart();
+  const { isFloatingCartVisible } = useUI();
 
-  // Ne pas afficher le bouton sur la page panier
-  if (isInCart) return null;
+  // Liste des routes où le panier doit être caché
+  const hiddenCartRoutes = [
+    '/cart',
+    '/orders',
+    '/address-selection',
+    '/payment-methods',
+    '/settings',
+    '/account',
+    '/login',
+    '/register',
+    '/saved-addresses',
+    '/payment-connect',
+    '/card-form',
+    '/delivery-method',
+    '/delivery-instructions',
+    '/address-form'
+  ];
+
+  // Ne pas afficher le bouton sur les pages spécifiées, les sous-pages de explore, ou si explicitement masqué
+  if (
+    hiddenCartRoutes.includes(pathname) || 
+    pathname.startsWith('/explore/') || 
+    !isFloatingCartVisible
+  ) {
+    return null;
+  }
 
   return (
     <TouchableOpacity 
       style={[
         styles.cartButton,
-        isInRestaurant ? styles.cartButtonWithoutNav : styles.cartButtonWithNav
+        pathname.startsWith('/restaurant/') ? styles.cartButtonWithoutNav : styles.cartButtonWithNav
       ]}
       onPress={() => router.push('/cart')}
     >
@@ -48,32 +69,55 @@ export default function RootLayout() {
   const [loaded] = useFonts({
     SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
   });
+  const [showSplash, setShowSplash] = useState(true);
+  const router = useRouter();
 
   useEffect(() => {
-    if (loaded) {
-      SplashScreen.hideAsync();
+    if (loaded && !showSplash) {
+      router.replace('/login');
     }
-  }, [loaded]);
+  }, [loaded, showSplash]);
 
   if (!loaded) {
     return null;
   }
 
   return (
-    <CartProvider>
-      <ThemeProvider value={DefaultTheme}>
-        <Stack screenOptions={{ headerShown: false }}>
-          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-          <Stack.Screen name="restaurant" options={{ headerShown: false }} />
-          <Stack.Screen name="cart" options={{ headerShown: false }} />
-          <Stack.Screen name="address-selection" options={{ headerShown: false }} />
-          <Stack.Screen name="+not-found" options={{ headerShown: false }} />
-        </Stack>
-        
-        <CartButton />
-        <StatusBar style="dark" />
-      </ThemeProvider>
-    </CartProvider>
+    <UIProvider>
+      <CartProvider>
+        <ThemeProvider value={DefaultTheme}>
+          {showSplash ? (
+            <CustomSplash 
+              onAnimationComplete={() => setShowSplash(false)} 
+            />
+          ) : (
+            <>
+              <Stack screenOptions={{ headerShown: false }}>
+                <Stack.Screen 
+                  name="login" 
+                  options={{ 
+                    headerShown: false,
+                    gestureEnabled: false 
+                  }} 
+                />
+                <Stack.Screen 
+                  name="register" 
+                  options={{ headerShown: false }} 
+                />
+                <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+                <Stack.Screen name="restaurant" options={{ headerShown: false }} />
+                <Stack.Screen name="cart" options={{ headerShown: false }} />
+                <Stack.Screen name="address-selection" options={{ headerShown: false }} />
+                <Stack.Screen name="+not-found" options={{ headerShown: false }} />
+              </Stack>
+              
+              <CartButton />
+              <StatusBar style="dark" />
+            </>
+          )}
+        </ThemeProvider>
+      </CartProvider>
+    </UIProvider>
   );
 }
 

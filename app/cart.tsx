@@ -11,6 +11,22 @@ export default function CartScreen() {
   const router = useRouter();
   const { items, removeFromCart, updateQuantity, getTotal, clearCart } = useCart();
 
+  // Grouper les articles par restaurant
+  const groupedItems = items.reduce((groups, item) => {
+    const restaurantId = item.restaurantId;
+    const restaurantName = item.restaurantName;
+    
+    if (!groups[restaurantId]) {
+      groups[restaurantId] = {
+        name: restaurantName,
+        items: []
+      };
+    }
+    
+    groups[restaurantId].items.push(item);
+    return groups;
+  }, {} as Record<number, { name: string; items: typeof items }>);
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <ThemedView style={styles.container}>
@@ -26,82 +42,84 @@ export default function CartScreen() {
         </ThemedView>
 
         {items.length === 0 ? (
-          <ThemedView style={styles.emptyContainer}>
-            <ThemedText style={styles.emptyText}>Votre panier est vide</ThemedText>
-            <TouchableOpacity
-              style={styles.continueButton}
-              onPress={() => router.push('/')}
-            >
-              <ThemedText style={styles.continueButtonText}>
-                Continuer vos achats
-              </ThemedText>
-            </TouchableOpacity>
+          <ThemedView style={styles.emptyCart}>
+            <Ionicons name="cart-outline" size={64} color={theme.colors.textSecondary} />
+            <ThemedText style={styles.emptyCartText}>Votre panier est vide</ThemedText>
           </ThemedView>
         ) : (
           <>
-            <ScrollView style={styles.scrollView}>
-              {items.map((item) => (
-                <ThemedView key={item.id} style={styles.cartItem}>
-                  {item.image && (
-                    <Image 
-                      source={{ uri: item.image }} 
-                      style={styles.itemImage}
-                      resizeMode="cover"
-                    />
-                  )}
-                  <ThemedView style={styles.itemInfo}>
-                    <ThemedText style={styles.itemName}>{item.name}</ThemedText>
-                    <ThemedText style={styles.itemPrice}>
-                      {(item.price * item.quantity).toFixed(2)}€
-                    </ThemedText>
-                    <ThemedView style={styles.quantityContainer}>
+            <ScrollView style={styles.itemsContainer}>
+              {Object.entries(groupedItems).map(([restaurantId, restaurant]) => (
+                <ThemedView key={restaurantId} style={styles.restaurantGroup}>
+                  <ThemedText style={styles.restaurantName}>
+                    {restaurant.name}
+                  </ThemedText>
+                  {restaurant.items.map((item) => (
+                    <ThemedView key={`${restaurantId}-${item.id}`} style={styles.cartItem}>
+                      {item.image && (
+                        <Image source={{ uri: item.image }} style={styles.itemImage} />
+                      )}
+                      <ThemedView style={styles.itemInfo}>
+                        <ThemedText style={styles.itemName}>{item.name}</ThemedText>
+                        
+                        {/* Affichage des options sélectionnées */}
+                        {item.selectedOptions && item.selectedOptions.length > 0 && (
+                          <ThemedView style={styles.optionsContainer}>
+                            {item.selectedOptions.map((option, index) => (
+                              <ThemedText key={index} style={styles.optionText}>
+                                {option.name}: {option.choice.name}
+                                {option.choice.price > 0 && ` (+${option.choice.price.toFixed(2)}€)`}
+                              </ThemedText>
+                            ))}
+                          </ThemedView>
+                        )}
+
+                        <ThemedText style={styles.itemPrice}>
+                          {(item.price * item.quantity).toFixed(2)}€
+                        </ThemedText>
+                        <ThemedView style={styles.quantityContainer}>
+                          <TouchableOpacity
+                            onPress={() => {
+                              if (item.quantity > 1) {
+                                updateQuantity(item.id, item.quantity - 1, item.restaurantId);
+                              } else {
+                                removeFromCart(item.id, item.restaurantId);
+                              }
+                            }}
+                          >
+                            <Ionicons name="remove-circle" size={24} color={theme.colors.primary} />
+                          </TouchableOpacity>
+                          <ThemedText style={styles.quantity}>{item.quantity}</ThemedText>
+                          <TouchableOpacity
+                            onPress={() => updateQuantity(item.id, item.quantity + 1, item.restaurantId)}
+                          >
+                            <Ionicons name="add-circle" size={24} color={theme.colors.primary} />
+                          </TouchableOpacity>
+                        </ThemedView>
+                      </ThemedView>
                       <TouchableOpacity
-                        onPress={() => {
-                          if (item.quantity > 1) {
-                            updateQuantity(item.id, item.quantity - 1);
-                          } else {
-                            removeFromCart(item.id);
-                          }
-                        }}
+                        onPress={() => removeFromCart(item.id, item.restaurantId)}
+                        style={styles.removeButton}
                       >
-                        <Ionicons name="remove-circle" size={24} color={theme.colors.primary} />
-                      </TouchableOpacity>
-                      <ThemedText style={styles.quantity}>{item.quantity}</ThemedText>
-                      <TouchableOpacity
-                        onPress={() => updateQuantity(item.id, item.quantity + 1)}
-                      >
-                        <Ionicons name="add-circle" size={24} color={theme.colors.primary} />
+                        <Ionicons name="trash" size={24} color="red" />
                       </TouchableOpacity>
                     </ThemedView>
-                  </ThemedView>
-                  <TouchableOpacity
-                    onPress={() => removeFromCart(item.id)}
-                    style={styles.removeButton}
-                  >
-                    <Ionicons name="trash" size={24} color="red" />
-                  </TouchableOpacity>
+                  ))}
                 </ThemedView>
               ))}
             </ScrollView>
 
+            {/* Total et bouton de commande */}
             <ThemedView style={styles.footer}>
               <ThemedView style={styles.totalContainer}>
-                <ThemedText style={styles.totalLabel}>Total</ThemedText>
-                <ThemedText style={styles.totalAmount}>
-                  {getTotal().toFixed(2)}€
-                </ThemedText>
+                <ThemedText style={styles.totalText}>Total</ThemedText>
+                <ThemedText style={styles.totalAmount}>{getTotal().toFixed(2)}€</ThemedText>
               </ThemedView>
-              <TouchableOpacity
+              <TouchableOpacity 
                 style={styles.checkoutButton}
-                onPress={() => {
-                  // Gérer le checkout
-                  clearCart();
-                  router.push('/');
-                }}
+                onPress={() => router.push('/checkout')}
               >
-                <ThemedText style={styles.checkoutButtonText}>
-                  Commander
-                </ThemedText>
+                <ThemedText style={styles.checkoutButtonText}>Commander</ThemedText>
               </TouchableOpacity>
             </ThemedView>
           </>
@@ -135,31 +153,31 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: 'bold',
   },
-  emptyContainer: {
+  emptyCart: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
     padding: 20,
   },
-  scrollView: {
-    flex: 1,
-  },
-  emptyText: {
+  emptyCartText: {
     textAlign: 'center',
     marginTop: 40,
     fontSize: 18,
   },
-  continueButton: {
-    backgroundColor: theme.colors.primary,
-    padding: 16,
-    borderRadius: 8,
-    margin: 16,
-    alignItems: 'center',
+  itemsContainer: {
+    flex: 1,
   },
-  continueButtonText: {
-    color: 'white',
-    fontSize: 16,
+  restaurantGroup: {
+    marginBottom: theme.spacing.md,
+    backgroundColor: theme.colors.backgroundSecondary,
+    borderRadius: theme.borderRadius.md,
+    padding: theme.spacing.md,
+  },
+  restaurantName: {
+    fontSize: 18,
     fontWeight: 'bold',
+    marginBottom: theme.spacing.sm,
+    color: theme.colors.primary,
   },
   cartItem: {
     flexDirection: 'row',
@@ -207,7 +225,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     marginBottom: 16,
   },
-  totalLabel: {
+  totalText: {
     fontSize: 18,
     fontWeight: 'bold',
   },
@@ -226,5 +244,13 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 16,
     fontWeight: 'bold',
+  },
+  optionsContainer: {
+    marginTop: 4,
+  },
+  optionText: {
+    fontSize: 12,
+    color: theme.colors.textSecondary,
+    marginBottom: 2,
   },
 }); 

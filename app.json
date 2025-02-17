@@ -1,41 +1,78 @@
 {
   "expo": {
-    "name": "UberV3",
+    "name": "Open Eat Source",
     "slug": "UberV3",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
+    "icon": "https://i.imgur.com/XVd98gk.png",
     "scheme": "myapp",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
+    "splash": {
+      "image": "https://i.imgur.com/XVd98gk.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffe4b9"
+    },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "icon": "https://i.imgur.com/XVd98gk.png",
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "Cette application a besoin d'accéder à votre localisation pour afficher l'adresse de livraison sur la carte."
+      }
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/images/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
-      }
+        "foregroundImage": "https://i.imgur.com/XVd98gk.png",
+        "backgroundColor": "#ffe4b9"
+      },
+      "permissions": [
+        "android.permission.RECORD_AUDIO",
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE",
+        "android.permission.CAMERA",
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.ACCESS_FINE_LOCATION"
+      ],
+      "package": "com.liloji.UberV3"
     },
     "web": {
       "bundler": "metro",
       "output": "static",
-      "favicon": "./assets/images/favicon.png"
+      "favicon": "https://i.imgur.com/XVd98gk.png"
     },
     "plugins": [
       "expo-router",
       [
         "expo-splash-screen",
         {
-          "image": "./assets/images/splash-icon.png",
+          "image": "https://i.imgur.com/XVd98gk.png",
           "imageWidth": 200,
           "resizeMode": "contain",
-          "backgroundColor": "#ffffff"
+          "backgroundColor": "#ffe4b9",
+          "text": "Open Eat Source",
+          "textColor": "#f6b44c",
+          "textSize": 24,
+          "textPosition": "bottom"
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "L'application souhaite accéder à vos photos pour modifier votre photo de profil.",
+          "cameraPermission": "L'application souhaite accéder à votre caméra pour prendre une photo."
         }
       ]
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "router": {
+        "origin": false
+      },
+      "eas": {
+        "projectId": "2fbeb7f2-19c8-4a5c-b87e-a1fcf28e7ff7"
+      }
     }
   }
 }

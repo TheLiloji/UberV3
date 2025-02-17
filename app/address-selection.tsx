@@ -8,19 +8,61 @@ import { GooglePlacesAutocomplete } from 'react-native-google-places-autocomplet
 
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
+import { theme } from '@/constants/theme';
 
-// Simulons des adresses sauvegardées
-const SAVED_ADDRESSES = [
+interface SavedAddress {
+  id: string;
+  label: string;
+  address: string;
+  deliveryInstructions?: string;
+  deliveryMethod: 'hand' | 'dropoff';
+  deliveryOption?: string;
+  icon: 'home' | 'business' | 'location';
+  coordinates: {
+    latitude: number;
+    longitude: number;
+  };
+}
+
+const SAVED_ADDRESSES: SavedAddress[] = [
   {
     id: '1',
-    name: 'Maison',
-    address: '123 Rue de la Paix, Paris',
+    label: 'Maison',
+    address: '17 rue de Romagnat, Aubière, France',
+    deliveryInstructions: 'Code: 1234, 2ème étage droite',
+    deliveryMethod: 'hand',
+    deliveryOption: 'door',
+    icon: 'home',
+    coordinates: {
+      latitude: 45.7590,
+      longitude: 3.1108
+    }
   },
   {
     id: '2',
-    name: 'Bureau',
-    address: '456 Avenue des Champs-Élysées, Paris',
+    label: 'Bureau',
+    address: '22 All. Alan Turing, 63000 Clermont-Ferrand, France',
+    deliveryInstructions: 'Bâtiment B, 3ème étage',
+    deliveryMethod: 'dropoff',
+    deliveryOption: 'reception',
+    icon: 'business',
+    coordinates: {
+      latitude: 45.7595,
+      longitude: 3.1301
+    }
   },
+  {
+    id: '3',
+    label: 'Salle de sport',
+    address: '5 Rue des Sports, 63000 Clermont-Ferrand',
+    deliveryMethod: 'hand',
+    deliveryOption: 'outside',
+    icon: 'location',
+    coordinates: {
+      latitude: 45.7712,
+      longitude: 3.0856
+    }
+  }
 ];
 
 // Remplacer par votre clé API Google
@@ -30,10 +72,15 @@ export default function AddressSelectionScreen() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
 
-  const handleAddressSelect = (address: string) => {
+  const handleAddressSelect = async (savedAddress: SavedAddress) => {
     router.push({
-      pathname: '/',
-      params: { selectedAddress: address }
+      pathname: '/delivery-instructions',
+      params: { 
+        selectedAddress: savedAddress.address,
+        latitude: savedAddress.coordinates.latitude,
+        longitude: savedAddress.coordinates.longitude,
+        deliveryInstructions: savedAddress.deliveryInstructions || ''
+      }
     });
   };
 
@@ -57,11 +104,18 @@ export default function AddressSelectionScreen() {
       const data = await response.json();
 
       if (data.results && data.results[0]) {
-        // Prendre la première adresse trouvée (la plus précise)
         const formattedAddress = data.results[0].formatted_address;
-        handleAddressSelect(formattedAddress);
+        handleAddressSelect({
+          id: 'new',
+          label: 'Nouvelle adresse',
+          address: formattedAddress,
+          coordinates: {
+            latitude: location.coords.latitude,
+            longitude: location.coords.longitude,
+          }
+        });
       } else {
-        // Fallback sur la géolocalisation Expo si Google échoue
+        // Fallback sur la géolocalisation Expo
         const address = await Location.reverseGeocodeAsync({
           latitude: location.coords.latitude,
           longitude: location.coords.longitude,
@@ -69,7 +123,15 @@ export default function AddressSelectionScreen() {
 
         if (address[0]) {
           const formattedAddress = `${address[0].street}, ${address[0].city}`;
-          handleAddressSelect(formattedAddress);
+          handleAddressSelect({
+            id: 'new',
+            label: 'Nouvelle adresse',
+            address: formattedAddress,
+            coordinates: {
+              latitude: location.coords.latitude,
+              longitude: location.coords.longitude,
+            }
+          });
         }
       }
     } catch (error) {
@@ -82,118 +144,140 @@ export default function AddressSelectionScreen() {
 
   return (
     <ThemedView style={styles.container}>
-      {/* Header */}
-      <ThemedView style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()}>
-          <Ionicons name="arrow-back" size={24} color="black" />
+      <View style={styles.header}>
+        <TouchableOpacity 
+          style={styles.backButton}
+          onPress={() => router.back()}
+        >
+          <Ionicons name="arrow-back" size={24} color={theme.colors.text} />
         </TouchableOpacity>
-        <ThemedText type="title">Sélectionner une adresse</ThemedText>
-        <View style={{ width: 24 }} />
-      </ThemedView>
+        <ThemedText style={styles.headerTitle}>Sélectionner une adresse</ThemedText>
+      </View>
 
-      {/* Search Bar with Google Places Autocomplete */}
-      <ThemedView style={styles.searchContainer}>
-        <GooglePlacesAutocomplete
-          placeholder="Saisir une adresse"
-          onPress={(data, details = null) => {
-            handleAddressSelect(data.description);
-          }}
-          query={{
-            key: GOOGLE_PLACES_API_KEY,
-            language: 'fr',
-            components: 'country:fr',
-          }}
-          styles={{
-            container: {
-              flex: 0,
-              width: '100%',
-            },
-            textInputContainer: {
-              width: '100%',
-              backgroundColor: 'transparent',
-            },
-            textInput: {
-              height: 50,
-              fontSize: 16,
-              backgroundColor: '#fff',
-              borderWidth: 1,
-              borderColor: '#f5b44d',
-              borderRadius: 8,
-              paddingHorizontal: 16,
-              paddingLeft: 45, // Espace pour l'icône
-              color: '#000',
-            },
-            listView: {
-              backgroundColor: '#fff',
-              borderWidth: 1,
-              borderColor: '#f0f0f0',
-              borderRadius: 8,
-              marginTop: 8,
-              position: 'absolute',
-              top: 55,
-              left: 0,
-              right: 0,
-              zIndex: 1000,
-              elevation: 3,
-            },
-            row: {
-              padding: 15,
-              height: 'auto',
-              minHeight: 50,
-              borderBottomWidth: 1,
-              borderBottomColor: '#f0f0f0',
-            },
-            description: {
-              fontSize: 14,
-              color: '#333',
-            },
-            predefinedPlacesDescription: {
-              color: '#333',
-            },
-          }}
-          renderLeftButton={() => (
-            <View style={styles.searchIcon}>
-              <Ionicons name="search" size={24} color="#666" />
-            </View>
-          )}
-          fetchDetails={true}
-          enablePoweredByContainer={false}
-          debounce={300}
-        />
-      </ThemedView>
+      <View style={styles.searchContainer}>
+        <View style={styles.searchBarWrapper}>
+          <Ionicons name="search" size={24} color="#666" style={styles.searchIcon} />
+          <GooglePlacesAutocomplete
+            placeholder="Saisir une adresse"
+            onPress={(data, details = null) => {
+              handleAddressSelect({
+                id: 'new',
+                label: 'Nouvelle adresse',
+                address: data.description,
+                coordinates: {
+                  latitude: details?.geometry?.location.lat || 48.866667,
+                  longitude: details?.geometry?.location.lng || 2.333333,
+                }
+              });
+            }}
+            query={{
+              key: GOOGLE_PLACES_API_KEY,
+              language: 'fr',
+              components: 'country:fr',
+            }}
+            styles={{
+              container: {
+                flex: 0,
+              },
+              textInput: {
+                height: 50,
+                fontSize: 16,
+                backgroundColor: '#fff',
+                borderWidth: 1,
+                borderColor: theme.colors.primary,
+                borderRadius: 8,
+                paddingHorizontal: 16,
+                paddingLeft: 45,
+                color: '#000',
+              },
+              listView: {
+                backgroundColor: '#fff',
+                borderWidth: 1,
+                borderColor: '#f0f0f0',
+                borderRadius: 8,
+                marginTop: 8,
+                position: 'absolute',
+                top: 55,
+                left: 0,
+                right: 0,
+                zIndex: 1000,
+                elevation: 3,
+              },
+              row: {
+                padding: 15,
+                height: 'auto',
+                minHeight: 50,
+                borderBottomWidth: 1,
+                borderBottomColor: '#f0f0f0',
+              },
+              description: {
+                fontSize: 14,
+                color: '#333',
+              },
+              predefinedPlacesDescription: {
+                color: '#333',
+              },
+            }}
+            renderLeftButton={() => (
+              <View style={styles.searchIcon}>
+                <Ionicons name="search" size={24} color="#666" />
+              </View>
+            )}
+            fetchDetails={true}
+            enablePoweredByContainer={false}
+            debounce={300}
+          />
+        </View>
+        
+        <TouchableOpacity 
+          style={styles.currentLocationButton}
+          onPress={getCurrentLocation}
+        >
+          <Ionicons name="locate" size={24} color={theme.colors.primary} />
+          <ThemedText style={styles.currentLocationText}>Position actuelle</ThemedText>
+        </TouchableOpacity>
+      </View>
 
       <ScrollView style={styles.content}>
-        {/* Current Location Button */}
-        <TouchableOpacity 
-          style={styles.locationButton} 
-          onPress={getCurrentLocation}
-          disabled={loading}
-        >
-          <ThemedView style={styles.locationIconContainer}>
-            <Ionicons name="locate" size={24} color="black" />
-          </ThemedView>
-          <ThemedText style={styles.locationButtonText}>
-            {loading ? 'Localisation en cours...' : 'Utiliser ma position actuelle'}
-          </ThemedText>
-        </TouchableOpacity>
-
-        {/* Saved Addresses */}
-        <ThemedView style={styles.savedAddressesContainer}>
+        <View style={styles.section}>
           <ThemedText style={styles.sectionTitle}>Adresses enregistrées</ThemedText>
           {SAVED_ADDRESSES.map((savedAddress) => (
             <TouchableOpacity
               key={savedAddress.id}
-              style={styles.savedAddressItem}
-              onPress={() => handleAddressSelect(savedAddress.address)}
+              style={styles.addressItem}
+              onPress={() => handleAddressSelect(savedAddress)}
             >
-              <Ionicons name="location-outline" size={24} color="#666" />
-              <ThemedView style={styles.savedAddressText}>
-                <ThemedText style={styles.savedAddressName}>{savedAddress.name}</ThemedText>
-                <ThemedText style={styles.savedAddressDetails}>{savedAddress.address}</ThemedText>
-              </ThemedView>
+              <View style={styles.addressIcon}>
+                <Ionicons 
+                  name={savedAddress.icon} 
+                  size={24} 
+                  color={theme.colors.primary} 
+                />
+              </View>
+              <View style={styles.addressDetails}>
+                <View style={styles.addressHeader}>
+                  <ThemedText style={styles.addressLabel}>{savedAddress.label}</ThemedText>
+                  <View style={styles.deliveryMethodBadge}>
+                    <Ionicons 
+                      name={savedAddress.deliveryMethod === 'hand' ? 'hand-left' : 'location'} 
+                      size={16} 
+                      color={theme.colors.primary} 
+                    />
+                    <ThemedText style={styles.deliveryMethodText}>
+                      {savedAddress.deliveryMethod === 'hand' ? 'En main propre' : 'À déposer'}
+                    </ThemedText>
+                  </View>
+                </View>
+                <ThemedText style={styles.addressText}>{savedAddress.address}</ThemedText>
+                {savedAddress.deliveryInstructions && (
+                  <ThemedText style={styles.instructionsText}>
+                    {savedAddress.deliveryInstructions}
+                  </ThemedText>
+                )}
+              </View>
             </TouchableOpacity>
           ))}
-        </ThemedView>
+        </View>
       </ScrollView>
     </ThemedView>
   );
@@ -213,29 +297,35 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#f0f0f0',
   },
-  searchContainer: {
-    padding: 16,
+  backButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     backgroundColor: '#fff',
-    position: 'relative',
-    zIndex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-  searchIcon: {
-    position: 'absolute',
-    left: 12,
-    top: 13,
-    zIndex: 2,
+  headerTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
   },
   content: {
     flex: 1,
   },
-  locationButton: {
+  section: {
+    padding: 16,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 16,
+  },
+  addressItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
+    paddingVertical: 12,
   },
-  locationIconContainer: {
+  addressIcon: {
     width: 40,
     height: 40,
     borderRadius: 20,
@@ -244,32 +334,67 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginRight: 12,
   },
-  locationButtonText: {
-    fontSize: 16,
-  },
-  savedAddressesContainer: {
-    padding: 16,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 16,
-  },
-  savedAddressItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 12,
-  },
-  savedAddressText: {
+  addressDetails: {
+    flex: 1,
     marginLeft: 12,
   },
-  savedAddressName: {
+  addressLabel: {
     fontSize: 16,
+    fontWeight: '600',
+    marginBottom: 2,
+  },
+  addressText: {
+    fontSize: 14,
+    color: theme.colors.textSecondary,
+  },
+  instructionsText: {
+    fontSize: 14,
+    color: theme.colors.textSecondary,
+    marginTop: 4,
+  },
+  searchContainer: {
+    padding: theme.spacing.md,
+    backgroundColor: theme.colors.background,
+    zIndex: 1000,
+  },
+  searchBarWrapper: {
+    position: 'relative',
+    marginBottom: theme.spacing.sm,
+  },
+  searchIcon: {
+    position: 'absolute',
+    top: 13,
+    left: 12,
+    zIndex: 1,
+  },
+  currentLocationButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f0f0',
+  },
+  currentLocationText: {
+    fontSize: 16,
+  },
+  deliveryMethodBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: `${theme.colors.primary}20`,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+    gap: 4,
+  },
+  deliveryMethodText: {
+    fontSize: 12,
+    color: theme.colors.primary,
     fontWeight: '500',
   },
-  savedAddressDetails: {
-    fontSize: 14,
-    color: '#666',
-    marginTop: 2,
+  addressHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 4,
   },
 }); 

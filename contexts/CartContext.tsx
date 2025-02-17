@@ -1,19 +1,31 @@
 import React, { createContext, useContext, useState } from 'react';
 
+interface CartItemOption {
+  name: string;
+  choice: {
+    id: number;
+    name: string;
+    price: number;
+  };
+}
+
 interface CartItem {
   id: string;
   restaurantId: number;
+  restaurantName?: string;
   name: string;
   price: number;
   quantity: number;
   image?: string;
+  selectedOptions?: CartItemOption[];
 }
 
 interface CartContextType {
   items: CartItem[];
   addToCart: (item: Omit<CartItem, 'quantity'>) => void;
-  removeFromCart: (itemId: string) => void;
-  updateQuantity: (itemId: string, quantity: number) => void;
+  removeFromCart: (itemId: string, restaurantId?: number) => void;
+  updateQuantity: (itemId: string, quantity: number, restaurantId?: number) => void;
+  getItemQuantity: (itemId: string, restaurantId?: number) => number;
   clearCart: () => void;
   getTotal: () => number;
   getCount: () => number;
@@ -24,28 +36,62 @@ const CartContext = createContext<CartContextType | undefined>(undefined);
 export function CartProvider({ children }: { children: React.ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([]);
 
+  // Fonction utilitaire pour créer un ID unique
+  const createUniqueId = (itemId: string, restaurantId?: number) => {
+    return `${restaurantId}-${itemId}`;
+  };
+
   const addToCart = (item: Omit<CartItem, 'quantity'>) => {
     setItems(currentItems => {
-      const existingItem = currentItems.find(i => i.id === item.id);
+      // Créer un ID unique qui inclut les options sélectionnées
+      const optionsString = item.selectedOptions 
+        ? `-${item.selectedOptions.map(o => `${o.name}-${o.choice.id}`).join('-')}` 
+        : '';
+      const uniqueId = `${item.restaurantId}-${item.id}${optionsString}`;
+      
+      const existingItem = currentItems.find(i => {
+        const currentOptionsString = i.selectedOptions
+          ? `-${i.selectedOptions.map(o => `${o.name}-${o.choice.id}`).join('-')}`
+          : '';
+        return `${i.restaurantId}-${i.id}${currentOptionsString}` === uniqueId;
+      });
+
       if (existingItem) {
-        return currentItems.map(i =>
-          i.id === item.id ? { ...i, quantity: i.quantity + 1 } : i
-        );
+        return currentItems.map(i => {
+          const currentOptionsString = i.selectedOptions
+            ? `-${i.selectedOptions.map(o => `${o.name}-${o.choice.id}`).join('-')}`
+            : '';
+          return `${i.restaurantId}-${i.id}${currentOptionsString}` === uniqueId
+            ? { ...i, quantity: i.quantity + 1 }
+            : i;
+        });
       }
+
       return [...currentItems, { ...item, quantity: 1 }];
     });
   };
 
-  const removeFromCart = (itemId: string) => {
-    setItems(currentItems => currentItems.filter(item => item.id !== itemId));
+  const removeFromCart = (itemId: string, restaurantId?: number) => {
+    const uniqueId = createUniqueId(itemId, restaurantId);
+    setItems(currentItems => 
+      currentItems.filter(i => createUniqueId(i.id, i.restaurantId) !== uniqueId)
+    );
   };
 
-  const updateQuantity = (itemId: string, quantity: number) => {
+  const updateQuantity = (itemId: string, quantity: number, restaurantId?: number) => {
+    const uniqueId = createUniqueId(itemId, restaurantId);
     setItems(currentItems =>
-      currentItems.map(item =>
-        item.id === itemId ? { ...item, quantity } : item
+      currentItems.map(i =>
+        createUniqueId(i.id, i.restaurantId) === uniqueId
+          ? { ...i, quantity }
+          : i
       )
     );
+  };
+
+  const getItemQuantity = (itemId: string, restaurantId?: number) => {
+    const uniqueId = createUniqueId(itemId, restaurantId);
+    return items.find(i => createUniqueId(i.id, i.restaurantId) === uniqueId)?.quantity || 0;
   };
 
   const clearCart = () => {
@@ -66,9 +112,10 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       addToCart,
       removeFromCart,
       updateQuantity,
-      clearCart,
+      getItemQuantity,
       getTotal,
       getCount,
+      clearCart,
     }}>
       {children}
     </CartContext.Provider>

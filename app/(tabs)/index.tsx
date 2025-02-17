@@ -2,11 +2,14 @@ import { Image, StyleSheet, ScrollView, TextInput, View, TouchableOpacity, Image
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useState, useEffect } from 'react';
+import { Platform, StatusBar } from 'react-native';
+import { AnimatedCategoryTitle } from '@/components/AnimatedCategoryTitle';
 
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { POPULAR_RESTAURANTS } from '@/constants/data';
 import { theme } from '@/constants/theme';
+import { USER_DATA } from '@/constants/user';
 
 const CATEGORIES = [
   {
@@ -148,6 +151,12 @@ export default function HomeScreen() {
     }
   };
 
+  const getSelectedCategoryName = () => {
+    if (!selectedCategory) return 'Tout';
+    const category = CATEGORIES.find(cat => cat.tag === selectedCategory);
+    return category ? category.name : 'Tout';
+  };
+
   const handleSearch = (text: string) => {
     setSearchQuery(text);
     setIsSearching(!!text);
@@ -155,19 +164,32 @@ export default function HomeScreen() {
     if (text) {
       const query = text.toLowerCase();
       
-      // Recherche dans les restaurants
-      const restaurants = POPULAR_RESTAURANTS.filter(restaurant => 
+      // Filtrer les restaurants en fonction de la catégorie sélectionnée
+      let filteredRestaurants = POPULAR_RESTAURANTS;
+      if (selectedCategory && selectedCategory !== 'all') {
+        filteredRestaurants = POPULAR_RESTAURANTS.filter(
+          restaurant => restaurant.tags.includes(selectedCategory)
+        );
+      }
+
+      // Recherche dans les restaurants filtrés
+      const matchingRestaurants = filteredRestaurants.filter(restaurant =>
         restaurant.name.toLowerCase().includes(query) ||
         restaurant.category.toLowerCase().includes(query)
       );
 
-      // Recherche dans les plats
-      const menuItems = getAllMenuItems(POPULAR_RESTAURANTS).filter(item =>
+      // Recherche dans les plats des restaurants filtrés
+      const menuItems = getAllMenuItems(filteredRestaurants).filter(item =>
         item.name.toLowerCase().includes(query) ||
-        item.description?.toLowerCase().includes(query)
+        item.description.toLowerCase().includes(query)
       );
 
-      setSearchResults({ restaurants, menuItems });
+      setSearchResults({
+        restaurants: matchingRestaurants,
+        menuItems: menuItems,
+      });
+    } else {
+      setSearchResults({ restaurants: [], menuItems: [] });
     }
   };
 
@@ -190,85 +212,91 @@ export default function HomeScreen() {
   return (
     <ThemedView style={styles.container}>
       {/* Barre de localisation fixe */}
-      <TouchableOpacity 
-        style={styles.fixedLocationBar}
-        onPress={handleLocationPress}
-      >
-        <ThemedView style={styles.locationContent}>
-          <ThemedView style={styles.locationIconContainer}>
-            <Image 
-              source={{ uri: 'https://imgur.com/3K9Mi7p.png' }}
-              style={styles.locationIcon}
-            />
+      <ThemedView style={styles.topBar}>
+        <TouchableOpacity 
+          style={styles.fixedLocationBar}
+          onPress={handleLocationPress}
+        >
+          <ThemedView style={styles.locationContent}>
+            <ThemedView style={styles.locationIconContainer}>
+              <Image 
+                source={{ uri: 'https://imgur.com/3K9Mi7p.png' }}
+                style={styles.locationIcon}
+              />
+            </ThemedView>
+            <ThemedView style={styles.locationInfo}>
+              <ThemedText style={styles.locationLabel}>Livrer à</ThemedText>
+              <ThemedText style={styles.locationAddress} numberOfLines={1}>
+                {address}
+              </ThemedText>
+            </ThemedView>
           </ThemedView>
-          <ThemedView style={styles.locationInfo}>
-            <ThemedText style={styles.locationLabel}>Livrer à</ThemedText>
-            <ThemedText style={styles.locationAddress} numberOfLines={1}>
-              {address}
-            </ThemedText>
-          </ThemedView>
-          <Ionicons name="chevron-down" size={24} color="black" />
-        </ThemedView>
-      </TouchableOpacity>
+        </TouchableOpacity>
+
+        <TouchableOpacity 
+          style={styles.profileButton}
+          onPress={() => router.push('/account')}
+        >
+          <Image 
+            source={{ uri: USER_DATA.avatar }}
+            style={styles.profileImage}
+          />
+        </TouchableOpacity>
+      </ThemedView>
 
       <ScrollView style={styles.scrollContent} showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContentContainer}>
         {/* En-tête avec image et barre de recherche */}
-        {selectedCategory === null ? (
-          <ThemedView style={styles.scrollHeader}>
-            <ImageBackground 
-              source={{ uri: 'https://i.imgur.com/dgyZrhd.png' }}
-              style={styles.headerImage}
-              resizeMode="cover"
-            >
-              <View style={styles.darkOverlay} />
-              <ThemedText style={styles.appTitle}>OpenEatSource</ThemedText>
-            </ImageBackground>
-            <ThemedView style={styles.searchBarCategory}>
-              <Ionicons name="search" size={24} color="#666" />
-              <TextInput 
-                placeholder={
-                  selectedCategory 
-                    ? `Rechercher dans ${CATEGORIES.find(cat => cat.tag === selectedCategory)?.name}`
-                    : "Rechercher un restaurant ou un plat"
-                }
-                style={styles.searchInput}
-                value={searchQuery}
-                onChangeText={handleSearch}
-              />
-              {searchQuery ? (
-                <TouchableOpacity 
-                  onPress={() => {
-                    setSearchQuery('');
-                    setIsSearching(false);
-                  }}
-                  style={styles.clearButton}
-                >
-                  <Ionicons name="close-circle" size={20} color="#666" />
-                </TouchableOpacity>
-              ) : null}
-            </ThemedView>
-          </ThemedView>
-        ) : (
-          <ThemedView style={styles.scrollHeader}>
-            <ImageBackground 
+        <ThemedView style={styles.scrollHeader}>
+          {selectedCategory ? (
+            <ImageBackground
               source={{ uri: CATEGORIES.find(cat => cat.tag === selectedCategory)?.bannerImage }}
-              style={[styles.headerImage, styles.categoryHeaderImage]}
+              style={styles.categoryHeaderImage}
               resizeMode="cover"
             >
-              <View style={styles.darkOverlay} />
-              <ThemedText style={styles.categoryTitle}>
-                {CATEGORIES.find(cat => cat.tag === selectedCategory)?.name}
-              </ThemedText>
+              <View style={styles.categoryHeaderOverlay}>
+                <AnimatedCategoryTitle 
+                  title={CATEGORIES.find(cat => cat.tag === selectedCategory)?.name || ''} 
+                />
+              </View>
             </ImageBackground>
-            <ThemedView style={styles.searchBarCategory}>
+          ) : (
+            <ImageBackground
+              source={{ uri: 'https://i.imgur.com/9H5MylK.png' }}
+              style={styles.categoryHeaderImage}
+              resizeMode="cover"
+            >
+              <View style={styles.categoryHeaderOverlay}>
+                <View style={styles.mainTitleContainer}>
+                  <View style={styles.titleWrapper}>
+                    <ThemedText style={styles.mainTitleText}>Open Eat</ThemedText>
+                    <ThemedText style={styles.sourceText}>SOURCE</ThemedText>
+                  </View>
+                  <View style={styles.orangeLine} />
+                </View>
+              </View>
+            </ImageBackground>
+          )}
+          <ThemedView style={styles.searchBarCategory}>
           <Ionicons name="search" size={24} color="#666" />
           <TextInput 
-                placeholder={`Rechercher dans ${CATEGORIES.find(cat => cat.tag === selectedCategory)?.name}`}
+              placeholder={`Rechercher dans ${getSelectedCategoryName()}`}
             style={styles.searchInput}
-          />
+              value={searchQuery}
+              onChangeText={handleSearch}
+            />
+            {searchQuery ? (
+              <TouchableOpacity 
+                onPress={() => {
+                  setSearchQuery('');
+                  setIsSearching(false);
+                }}
+                style={styles.clearButton}
+              >
+                <Ionicons name="close-circle" size={20} color="#666" />
+              </TouchableOpacity>
+            ) : null}
         </ThemedView>
       </ThemedView>
-        )}
 
         {/* Section des catégories */}
         <ThemedView style={styles.section}>
@@ -319,7 +347,7 @@ export default function HomeScreen() {
               ? 'Les 8 meilleurs restaurants'
               : selectedCategory === 'all'
                 ? 'Tous les restaurants'
-                : `Restaurants ${CATEGORIES.find(cat => cat.tag === selectedCategory)?.name}`}
+                : `Restaurants ${CATEGORIES.find(cat => cat.tag === selectedCategory)?.name || ''}`}
           </ThemedText>
           <ThemedView style={styles.restaurantsGrid}>
             {filteredRestaurants.length > 0 ? (
@@ -370,11 +398,15 @@ export default function HomeScreen() {
 
         {/* Liste déroulante des résultats de recherche */}
         {isSearching && (
-          <ThemedView style={styles.searchResults}>
-            <ScrollView style={styles.searchResultsScroll}>
-              {/* Résultats des restaurants */}
+          <View style={styles.searchResults}>
+            <ScrollView 
+              style={styles.searchResultsScroll}
+              showsVerticalScrollIndicator={true}
+              nestedScrollEnabled={true}
+              indicatorStyle="black"
+            >
               {searchResults.restaurants.length > 0 && (
-                <>
+                <View>
                   <ThemedText style={styles.searchResultsSection}>Restaurants</ThemedText>
                   {searchResults.restaurants.map((restaurant) => (
                     <TouchableOpacity
@@ -400,12 +432,10 @@ export default function HomeScreen() {
                       </View>
                     </TouchableOpacity>
                   ))}
-                </>
+                </View>
               )}
-
-              {/* Résultats des plats */}
               {searchResults.menuItems.length > 0 && (
-                <>
+                <View>
                   <ThemedText style={styles.searchResultsSection}>Plats</ThemedText>
                   {searchResults.menuItems.map((item) => (
                     <TouchableOpacity
@@ -438,16 +468,10 @@ export default function HomeScreen() {
                       </View>
                     </TouchableOpacity>
                   ))}
-                </>
-              )}
-
-              {searchResults.restaurants.length === 0 && searchResults.menuItems.length === 0 && (
-                <ThemedText style={styles.noResultsText}>
-                  Aucun résultat trouvé
-                </ThemedText>
+                </View>
               )}
             </ScrollView>
-          </ThemedView>
+          </View>
         )}
       </ScrollView>
     </ThemedView>
@@ -458,25 +482,40 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
+  topBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: theme.spacing.sm,
+    paddingTop: Platform.OS === 'ios' ? 50 : StatusBar.currentHeight + 10,
+  },
   fixedLocationBar: {
-    padding: 12,
-    paddingTop: 60,
-    backgroundColor: 'white',
-    borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
-    zIndex: 1,
+    flex: 1,
+    marginRight: theme.spacing.sm,
+  },
+  locationContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: theme.spacing.sm,
+  },
+  profileButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    overflow: 'hidden',
+    borderWidth: 2,
+    borderColor: theme.colors.primary,
+  },
+  profileImage: {
+    width: '100%',
+    height: '100%',
   },
   scrollContent: {
     flex: 1,
   },
   scrollHeader: {
-    padding: 16,
-    gap: 16,
-  },
-  locationContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
+    width: '100%',
+    marginBottom: theme.spacing.md,
   },
   locationInfo: {
     flex: 1,
@@ -492,11 +531,13 @@ const styles = StyleSheet.create({
   searchBarCategory: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'white',
-    padding: 12,
-    borderRadius: theme.borderRadius.md,
+    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+    borderRadius: theme.borderRadius.lg,
+    padding: theme.spacing.sm,
+    marginHorizontal: theme.spacing.md,
     marginTop: -25,
-    marginHorizontal: 16,
+    borderWidth: 1,
+    borderColor: theme.colors.primary,
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
@@ -505,13 +546,13 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 3.84,
     elevation: 5,
-    borderWidth: 1,
-    borderColor: '#f5b44d',
+    zIndex: 1001,
   },
   searchInput: {
     flex: 1,
+    marginLeft: theme.spacing.sm,
     fontSize: 16,
-    padding: 4,
+    color: theme.colors.text,
   },
   content: {
     flex: 1,
@@ -694,45 +735,21 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   categoryHeaderImage: {
-    width: '100vw',
-    height: 150,
+    width: '100%',
+    height: 200,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 20,
-    marginHorizontal: -16,
-    marginTop: -16,
-    marginBottom: -16,
-    alignSelf: 'stretch',
+    marginTop: 0,
+  },
+  categoryHeaderOverlay: {
+    position: 'absolute',
+    top: 0,
     left: 0,
     right: 0,
-    position: 'relative',
-  },
-  categoryTitle: {
-    fontSize: 40,
-    fontWeight: '900',
-    color: '#FFFFFF',
-    textAlign: 'center',
-    textShadowColor: 'rgba(0, 0, 0, 0.75)',
-    textShadowOffset: { width: -1, height: 1 },
-    textShadowRadius: 10,
-    includeFontPadding: false,
-    textAlignVertical: 'center',
-    lineHeight: 48,
-    zIndex: 1,
-  },
-  locationIconContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#fee5b9',
+    bottom: 0,
+    backgroundColor: 'rgba(0,0,0,0.4)',
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 12,
-  },
-  locationIcon: {
-    width: 24,
-    height: 24,
-    resizeMode: 'contain',
   },
   darkOverlay: {
     position: 'absolute',
@@ -743,18 +760,18 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0, 0, 0, 0.4)',
   },
   clearButton: {
-    padding: 8,
+    padding: 4,
   },
   searchResults: {
     position: 'absolute',
-    top: 160,
-    left: 16,
-    right: 16,
-    backgroundColor: 'white',
-    borderRadius: 8,
-    maxHeight: '60%',
+    top: 220,
+    left: 0,
+    right: 0,
+    backgroundColor: theme.colors.background,
+    borderRadius: theme.borderRadius.lg,
+    marginHorizontal: theme.spacing.md,
+    maxHeight: 400,
     zIndex: 1000,
-    elevation: 5,
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
@@ -762,18 +779,17 @@ const styles = StyleSheet.create({
     },
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
-    borderWidth: 1,
-    borderColor: '#f0f0f0',
+    elevation: 5,
+    paddingRight: 2,
   },
   searchResultsScroll: {
-    flexGrow: 0,
+    maxHeight: 400,
+    paddingRight: 2,
   },
   searchResultItem: {
-    flexDirection: 'row',
-    padding: 12,
-    alignItems: 'center',
+    padding: theme.spacing.md,
     borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
+    borderBottomColor: theme.colors.border,
   },
   searchResultImage: {
     width: 50,
@@ -801,7 +817,7 @@ const styles = StyleSheet.create({
   searchResultsSection: {
     fontSize: 16,
     fontWeight: '600',
-    padding: 12,
+    padding: theme.spacing.sm,
     backgroundColor: theme.colors.backgroundSecondary,
   },
   searchResultDescription: {
@@ -811,5 +827,67 @@ const styles = StyleSheet.create({
   },
   scrollContentContainer: {
     paddingBottom: 100,
+  },
+  mainTitleContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 20,
+  },
+  titleWrapper: {
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  mainTitleText: {
+    fontSize: 42,
+    fontWeight: '900',
+    color: '#FFFFFF',
+    textAlign: 'center',
+    includeFontPadding: false,
+    fontFamily: 'SpaceMono',
+    letterSpacing: 3,
+    lineHeight: 48,
+  },
+  sourceText: {
+    fontSize: 32,
+    fontWeight: '900',
+    color: '#f6b44d',
+    textAlign: 'center',
+    includeFontPadding: false,
+    fontFamily: 'SpaceMono',
+    letterSpacing: 5,
+    marginTop: 10,
+    lineHeight: 40,
+    paddingTop: 5,
+  },
+  orangeLine: {
+    height: 4,
+    backgroundColor: '#f6b44d',
+    width: 100,
+    borderRadius: 2,
+    marginTop: 10,
+  },
+  locationIconContainer: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: theme.colors.primary,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: theme.spacing.sm,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+    overflow: 'visible',
+  },
+  locationIcon: {
+    width: 28,
+    height: 28,
+    tintColor: '#FFFFFF',
+    resizeMode: 'contain',
   },
 });
