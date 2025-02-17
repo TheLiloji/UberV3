@@ -1,0 +1,90 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`AnimatedCategoryTitle renders correctly 1`] = `
+<View
+  style={
+    {
+      "alignItems": "center",
+      "justifyContent": "center",
+      "paddingHorizontal": 24,
+      "paddingVertical": 0,
+      "width": "100%",
+    }
+  }
+>
+  <View
+    collapsable={false}
+    style={
+      {
+        "alignItems": "center",
+        "opacity": 0,
+        "paddingTop": 0,
+        "transform": [
+          {
+            "scale": 0.8,
+          },
+          {
+            "translateY": -50,
+          },
+        ],
+        "width": "100%",
+      }
+    }
+  >
+    <Text
+      style={
+        [
+          {
+            "color": "#11181C",
+          },
+          {
+            "fontSize": 16,
+            "lineHeight": 24,
+          },
+          undefined,
+          undefined,
+          undefined,
+          undefined,
+          {
+            "color": "#FFFFFF",
+            "fontFamily": "SpaceMono",
+            "fontSize": 42,
+            "fontWeight": "900",
+            "includeFontPadding": false,
+            "letterSpacing": 3,
+            "lineHeight": 48,
+            "marginBottom": 4,
+            "textAlign": "center",
+            "textShadowColor": "rgba(0, 0, 0, 0.75)",
+            "textShadowOffset": {
+              "height": 1,
+              "width": -1,
+            },
+            "textShadowRadius": 10,
+          },
+        ]
+      }
+    >
+      Test Category
+    </Text>
+    <View
+      collapsable={false}
+      style={
+        {
+          "backgroundColor": "#FFFFFF",
+          "borderRadius": 2,
+          "height": 4,
+          "shadowColor": "#000",
+          "shadowOffset": {
+            "height": 2,
+            "width": 0,
+          },
+          "shadowOpacity": 0.3,
+          "shadowRadius": 4,
+          "width": 0,
+        }
+      }
+    />
+  </View>
+</View>
+`;
