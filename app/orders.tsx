@@ -12,6 +12,7 @@ interface OrderItem {
   name: string;
   quantity: number;
   price: number;
+  options?: string[];
 }
 
 interface Order {
@@ -49,8 +50,16 @@ const ORDERS: Order[] = [
           {
             id: '5',
             name: 'Menu Kebab',
-            quantity: 2,
-            price: 15.90
+            quantity: 1,
+            price: 15.90,
+            options: ['Sauce Algérienne', 'Sans oignons']
+          },
+          {
+            id: '5-2',
+            name: 'Menu Kebab',
+            quantity: 1,
+            price: 15.90,
+            options: ['Sauce Samouraï', 'Extra fromage']
           }
         ],
         subtotal: 31.80
@@ -142,6 +151,24 @@ export default function OrdersScreen() {
     return order.status === 'completed';
   });
 
+  const renderOrderItem = (item: OrderItem) => (
+    <View key={item.id} style={styles.orderItemContainer}>
+      <View style={styles.orderItemHeader}>
+        <ThemedText style={styles.orderItem}>
+          {item.quantity}x {item.name}
+        </ThemedText>
+        <ThemedText style={styles.itemPrice}>
+          {(item.price * item.quantity).toFixed(2)}€
+        </ThemedText>
+      </View>
+      {item.options && item.options.length > 0 && (
+        <ThemedText style={styles.orderItemOptions}>
+          {item.options.join(', ')}
+        </ThemedText>
+      )}
+    </View>
+  );
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <ThemedView style={styles.container}>
@@ -207,11 +234,7 @@ const OrderCard = ({ order }: { order: Order }) => {
                   {restaurant.name}
                 </ThemedText>
                 <View style={styles.orderItems}>
-                  {restaurant.items.map(item => (
-                    <ThemedText key={item.id} style={styles.orderItem}>
-                      {item.quantity}x {item.name} - {item.price.toFixed(2)}€
-                    </ThemedText>
-                  ))}
+                  {restaurant.items.map(renderOrderItem)}
                 </View>
                 <ThemedText style={styles.subtotalText}>
                   Sous-total: {restaurant.subtotal.toFixed(2)}€
@@ -269,11 +292,7 @@ const OrderCard = ({ order }: { order: Order }) => {
       </View>
 
       <View style={styles.orderItems}>
-        {order.items?.map(item => (
-          <ThemedText key={item.id} style={styles.orderItem}>
-            {item.quantity}x {item.name} - {item.price.toFixed(2)}€
-          </ThemedText>
-        ))}
+        {order.items?.map(renderOrderItem)}
       </View>
 
       <View style={styles.orderTotal}>
@@ -373,9 +392,30 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: theme.colors.border,
   },
+  orderItemContainer: {
+    marginBottom: theme.spacing.sm,
+  },
+  orderItemHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
   orderItem: {
     fontSize: 14,
+    color: theme.colors.text,
+    flex: 1,
+  },
+  itemPrice: {
+    fontSize: 14,
+    color: theme.colors.text,
+    fontWeight: '500',
+  },
+  orderItemOptions: {
+    fontSize: 12,
     color: theme.colors.textSecondary,
+    marginTop: 2,
+    marginLeft: theme.spacing.sm,
+    fontStyle: 'italic',
   },
   orderTotal: {
     marginTop: theme.spacing.md,
