@@ -10,6 +10,8 @@ import { ThemedView } from '@/components/ThemedView';
 import { POPULAR_RESTAURANTS } from '@/constants/data';
 import { theme } from '@/constants/theme';
 import { USER_DATA } from '@/constants/user';
+import axiosInstance from '@/api/axiosInstance'; // Import the Axios instance
+import AsyncStorage from '@react-native-async-storage/async-storage'; // Import AsyncStorage
 
 const CATEGORIES = [
   {
@@ -121,6 +123,21 @@ const getAllMenuItems = (restaurants: typeof POPULAR_RESTAURANTS) => {
   );
 };
 
+const fetchRestaurants = async () => {
+  try {
+    const token = await AsyncStorage.getItem('token');
+    const response = await axiosInstance.get('/api/restaurants', {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching restaurants:', error);
+    return [];
+  }
+};
+
 export default function HomeScreen() {
   const router = useRouter();
   const { selectedAddress } = useLocalSearchParams();
@@ -132,12 +149,21 @@ export default function HomeScreen() {
     restaurants: typeof POPULAR_RESTAURANTS,
     menuItems: ReturnType<typeof getAllMenuItems>
   }>({ restaurants: [], menuItems: [] });
-  
+  const [restaurants, setRestaurants] = useState<typeof POPULAR_RESTAURANTS>([]);
+
   useEffect(() => {
     if (selectedAddress) {
       setAddress(selectedAddress.toString());
     }
   }, [selectedAddress]);
+
+  useEffect(() => {
+    const loadRestaurants = async () => {
+      const fetchedRestaurants = await fetchRestaurants();
+      setRestaurants(fetchedRestaurants);
+    };
+    loadRestaurants();
+  }, []);
 
   const handleLocationPress = () => {
     router.push('/address-selection');
@@ -165,9 +191,9 @@ export default function HomeScreen() {
       const query = text.toLowerCase();
       
       // Filtrer les restaurants en fonction de la catégorie sélectionnée
-      let filteredRestaurants = POPULAR_RESTAURANTS;
+      let filteredRestaurants = restaurants;
       if (selectedCategory && selectedCategory !== 'all') {
-        filteredRestaurants = POPULAR_RESTAURANTS.filter(
+        filteredRestaurants = restaurants.filter(
           restaurant => restaurant.tags.includes(selectedCategory)
         );
       }
@@ -193,7 +219,7 @@ export default function HomeScreen() {
     }
   };
 
-  const filteredRestaurants = POPULAR_RESTAURANTS
+  const filteredRestaurants = restaurants
     .filter(restaurant => {
       if (selectedCategory === null) {
         return true;

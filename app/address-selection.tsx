@@ -1,10 +1,12 @@
 import 'react-native-get-random-values';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { StyleSheet, TouchableOpacity, ScrollView, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import * as Location from 'expo-location';
 import { GooglePlacesAutocomplete } from 'react-native-google-places-autocomplete';
+import axiosInstance from '@/api/axiosInstance'; // Import the Axios instance
+import AsyncStorage from '@react-native-async-storage/async-storage'; // Import AsyncStorage
 
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
@@ -68,9 +70,54 @@ const SAVED_ADDRESSES: SavedAddress[] = [
 // Remplacer par votre clé API Google
 const GOOGLE_PLACES_API_KEY = 'AIzaSyAPZgtRa3ozBfhxlNLptXmR9hPL8sivT6c';
 
+const fetchAddresses = async () => {
+  try {
+    const token = await AsyncStorage.getItem('token');
+    if (!token) {
+      throw new Error('No token found');
+    }
+    const response = await axiosInstance.get('/api/addresses', {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching addresses:', error);
+    return [];
+  }
+};
+
+const addAddress = async (newAddress) => {
+  try {
+    const token = await AsyncStorage.getItem('token');
+
+    console.log(newAddress);
+    const response = await axiosInstance.post('/api/addresses', newAddress, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      }
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error adding address:', error, "Request:", error.request);
+    return null;
+  }
+};
+
 export default function AddressSelectionScreen() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const [addresses, setAddresses] = useState<SavedAddress[]>([]);
+  const [currentLocation, setCurrentLocation] = useState(null);
+
+  useEffect(() => {
+    const loadAddresses = async () => {
+      const fetchedAddresses = await fetchAddresses();
+      setAddresses(fetchedAddresses);
+    };
+    loadAddresses();
+  }, []);
 
   const handleAddressSelect = async (savedAddress: SavedAddress) => {
     router.push({
@@ -82,6 +129,13 @@ export default function AddressSelectionScreen() {
         deliveryInstructions: savedAddress.deliveryInstructions || ''
       }
     });
+  };
+
+  const handleAddAddress = async (newAddress) => {
+    const addedAddress = await addAddress(newAddress);
+    if (addedAddress) {
+      setAddresses([...addresses, { id: addedAddress.addressId, ...newAddress }]);
+    }
   };
 
   const getCurrentLocation = async () => {
@@ -105,13 +159,24 @@ export default function AddressSelectionScreen() {
 
       if (data.results && data.results[0]) {
         const formattedAddress = data.results[0].formatted_address;
-        handleAddressSelect({
-          id: 'new',
+        setCurrentLocation({
           label: 'Nouvelle adresse',
           address: formattedAddress,
           coordinates: {
             latitude: location.coords.latitude,
             longitude: location.coords.longitude,
+          },
+          icon: 'location', // Default icon
+        });
+        router.push({
+          pathname: '/delivery-method',
+          params: {
+            label: 'Nouvelle adresse',
+            address: formattedAddress,
+            latitude: location.coords.latitude.toString(),
+            longitude: location.coords.longitude.toString(),
+            icon: 'location',
+            mode: 'add',
           }
         });
       } else {
@@ -123,13 +188,24 @@ export default function AddressSelectionScreen() {
 
         if (address[0]) {
           const formattedAddress = `${address[0].street}, ${address[0].city}`;
-          handleAddressSelect({
-            id: 'new',
+          setCurrentLocation({
             label: 'Nouvelle adresse',
             address: formattedAddress,
             coordinates: {
               latitude: location.coords.latitude,
               longitude: location.coords.longitude,
+            },
+            icon: 'location', // Default icon
+          });
+          router.push({
+            pathname: '/delivery-method',
+            params: {
+              label: 'Nouvelle adresse',
+              address: formattedAddress,
+              latitude: location.coords.latitude.toString(),
+              longitude: location.coords.longitude.toString(),
+              icon: 'location',
+              mode: 'add',
             }
           });
         }
@@ -160,8 +236,7 @@ export default function AddressSelectionScreen() {
           <GooglePlacesAutocomplete
             placeholder="Saisir une adresse"
             onPress={(data, details = null) => {
-              handleAddressSelect({
-                id: 'new',
+              handleAddAddress({
                 label: 'Nouvelle adresse',
                 address: data.description,
                 coordinates: {
@@ -241,7 +316,7 @@ export default function AddressSelectionScreen() {
       <ScrollView style={styles.content}>
         <View style={styles.section}>
           <ThemedText style={styles.sectionTitle}>Adresses enregistrées</ThemedText>
-          {SAVED_ADDRESSES.map((savedAddress) => (
+          {addresses.map((savedAddress) => (
             <TouchableOpacity
               key={savedAddress.id}
               style={styles.addressItem}
@@ -397,4 +472,4 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 4,
   },
-}); 
+});

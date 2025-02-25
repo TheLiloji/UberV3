@@ -7,6 +7,9 @@ import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { theme } from '@/constants/theme';
 import { PageTransition } from '@/components/PageTransition';
+import axiosInstance from '@/api/axiosInstance'; // Import the Axios instance
+import AsyncStorage from '@react-native-async-storage/async-storage'; // Import AsyncStorage
+import { useEffect } from 'react'; // Import useEffect
 
 interface SavedAddress {
   id: string;
@@ -22,50 +25,45 @@ interface SavedAddress {
   };
 }
 
-const initialAddresses: SavedAddress[] = [
-  {
-    id: '1',
-    label: 'Maison',
-    address: '17 rue de Romagnat, Aubière, France',
-    deliveryInstructions: 'Code: 1234, 2ème étage droite',
-    deliveryMethod: 'hand',
-    deliveryOption: 'door',
-    icon: 'home',
-    coordinates: {
-      latitude: 45.7590,
-      longitude: 3.1108
-    }
-  },
-  {
-    id: '2',
-    label: 'Bureau',
-    address: '22 All. Alan Turing, 63000 Clermont-Ferrand, France',
-    deliveryInstructions: 'Bâtiment B, 3ème étage',
-    deliveryMethod: 'dropoff',
-    deliveryOption: 'reception',
-    icon: 'business',
-    coordinates: {
-      latitude: 45.7595,
-      longitude: 3.1301
-    }
-  },
-  {
-    id: '3',
-    label: 'Salle de sport',
-    address: '5 Rue des Sports, 63000 Clermont-Ferrand',
-    deliveryMethod: 'hand',
-    deliveryOption: 'outside',
-    icon: 'location',
-    coordinates: {
-      latitude: 45.7712,
-      longitude: 3.0856
-    }
+const fetchAddresses = async () => {
+  try {
+    const token = await AsyncStorage.getItem('token');
+    const response = await axiosInstance.get('/api/addresses', {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching addresses:', error);
+    return [];
   }
-];
+};
+
+const deleteAddress = async (addressId) => {
+  try {
+    const token = await AsyncStorage.getItem('token');
+    await axiosInstance.delete(`/api/addresses/${addressId}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+  } catch (error) {
+    console.error('Error deleting address:', error);
+  }
+};
 
 export default function SavedAddressesScreen() {
   const router = useRouter();
-  const [addresses, setAddresses] = useState<SavedAddress[]>(initialAddresses);
+  const [addresses, setAddresses] = useState<SavedAddress[]>([]);
+
+  useEffect(() => {
+    const loadAddresses = async () => {
+      const fetchedAddresses = await fetchAddresses();
+      setAddresses(fetchedAddresses);
+    };
+    loadAddresses();
+  }, []);
 
   const handleAddAddress = () => {
     router.push({
@@ -96,7 +94,8 @@ export default function SavedAddressesScreen() {
         {
           text: 'Supprimer',
           style: 'destructive',
-          onPress: () => {
+          onPress: async () => {
+            await deleteAddress(addressId);
             setAddresses(addresses.filter(addr => addr.id !== addressId));
           },
         },
@@ -302,4 +301,4 @@ const styles = StyleSheet.create({
     color: theme.colors.textSecondary,
     fontSize: 16,
   },
-}); 
+});

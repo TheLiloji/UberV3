@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { StyleSheet, TouchableOpacity, View, TextInput, SafeAreaView, Platform, StatusBar, Image } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import axiosInstance from '@/api/axiosInstance';
+import AsyncStorage from '@react-native-async-storage/async-storage'; // Import AsyncStorage
 
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
@@ -16,12 +18,19 @@ export default function LoginScreen() {
   const [error, setError] = useState('');
   const { setFloatingCartVisible } = useUI();
 
-  const handleLogin = () => {
-    if (email === 'test' && password === 'test') {
-      // Rediriger vers la sélection d'adresse après connexion
-      router.replace('/address-selection');
-    } else {
-      setError('Email ou mot de passe incorrect');
+  const handleLogin = async () => {
+    try {
+      const response = await axiosInstance.post('/api/auth/login', { email, password });
+      if (response.data.token) {
+        await AsyncStorage.setItem('token', response.data.token);
+        console.log("Login successful");
+        // Redirect to address selection after login
+        router.replace('/address-selection');
+      } else {
+        setError('Email ou mot de passe incorrect');
+      }
+    } catch (err) {
+      setError(`Erreur lors de la connexion: ${err.response?.data?.message || err.message}`);
     }
   };
 
@@ -29,7 +38,7 @@ export default function LoginScreen() {
     <ThemedView style={styles.container}>
       <View style={styles.content}>
         <View style={styles.logoContainer}>
-          <Image 
+          <Image
             source={{ uri: 'https://i.imgur.com/XVd98gk.png' }}
             style={styles.logo}
           />
@@ -64,7 +73,7 @@ export default function LoginScreen() {
 
           {error ? <ThemedText style={styles.errorText}>{error}</ThemedText> : null}
 
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.loginButton}
             onPress={handleLogin}
           >
@@ -77,14 +86,14 @@ export default function LoginScreen() {
             <View style={styles.dividerLine} />
           </View>
 
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.registerButton}
             onPress={() => router.push('/register')}
           >
             <ThemedText style={styles.registerButtonText}>Créer un compte</ThemedText>
           </TouchableOpacity>
 
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.devButton}
             onPress={() => router.replace('/')}
           >
@@ -229,4 +238,4 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '500',
   },
-}); 
+});

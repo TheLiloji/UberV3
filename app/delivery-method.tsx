@@ -6,6 +6,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { theme } from '@/constants/theme';
+import axiosInstance from '@/api/axiosInstance'; // Import the Axios instance
+import AsyncStorage from '@react-native-async-storage/async-storage'; // Import AsyncStorage
 
 type DeliveryMethod = 'hand' | 'dropoff';
 type HandDeliveryOption = 'door' | 'outside' | 'lobby' | 'other';
@@ -30,31 +32,49 @@ export default function DeliveryMethodScreen() {
   const [dropoffOption, setDropoffOption] = useState<DropoffOption | null>(null);
   const [instructions, setInstructions] = useState('');
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!deliveryMethod) {
       Alert.alert('Erreur', 'Veuillez sélectionner un mode de livraison');
       return;
     }
-
+  
     if (deliveryMethod === 'hand' && !handDeliveryOption) {
       Alert.alert('Erreur', 'Veuillez sélectionner une option de livraison en main propre');
       return;
     }
-
+  
     if (deliveryMethod === 'dropoff' && !dropoffOption) {
       Alert.alert('Erreur', 'Veuillez sélectionner une option de dépôt');
       return;
     }
-
-    router.push({
-      pathname: '/saved-addresses',
-      params: {
-        ...params,
-        deliveryMethod,
-        deliveryOption: deliveryMethod === 'hand' ? handDeliveryOption : dropoffOption,
-        instructions
+  
+    const newAddress = {
+      label: params.label,
+      address: params.address,
+      deliveryInstructions: instructions,
+      deliveryMethod,
+      deliveryOption: deliveryMethod === 'hand' ? handDeliveryOption : dropoffOption,
+      icon: params.icon,
+      coordinates: {
+        latitude: parseFloat(params.latitude),
+        longitude: parseFloat(params.longitude),
       }
-    });
+    };
+  
+    try {
+      const token = await AsyncStorage.getItem('token');
+      const response = await axiosInstance.post('/api/addresses', newAddress, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        }
+      });
+      if (response.data) {
+        router.push('/saved-addresses');
+      }
+    } catch (error) {
+      console.error('Error adding address:', error);
+      Alert.alert('Erreur', 'Erreur lors de l\'ajout de l\'adresse');
+    }
   };
 
   return (
@@ -311,4 +331,4 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
   },
-}); 
+});

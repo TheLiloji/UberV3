@@ -6,6 +6,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { theme } from '@/constants/theme';
+import axiosInstance from '@/api/axiosInstance'; // Import the Axios instance
 
 export default function RegisterScreen() {
   const router = useRouter();
@@ -15,11 +16,20 @@ export default function RegisterScreen() {
     email: '',
     phone: '',
     password: '',
+    avatarUrl: 'null',
     confirmPassword: '',
+  });
+  const [registerData, setRegisterData] = useState({
+    firstName: '',
+    lastName: '',
+    email: '',
+    phone: '',
+    password: '',
+    avatarUrl: 'null',
   });
   const [error, setError] = useState('');
 
-  const handleRegister = () => {
+  const handleRegister = async () => {
     // Vérifications basiques
     if (Object.values(formData).some(value => !value)) {
       setError('Veuillez remplir tous les champs');
@@ -31,11 +41,26 @@ export default function RegisterScreen() {
       return;
     }
 
-    // Dans une vraie app, on enverrait les données à une API
-    console.log('Register data:', formData);
-    
-    // Redirection vers la page de connexion
-    router.replace('/login');
+    try {
+      registerData.firstName = formData.firstName;
+      registerData.lastName = formData.lastName;
+      registerData.email = formData.email;
+      registerData.phone = formData.phone;
+      registerData.password = formData.password;
+      registerData.avatarUrl = formData.avatarUrl;
+      const response = await axiosInstance.post('api/auth/register', registerData);
+
+      console.log(response);
+
+      if (response.status === 201) {
+        // Redirection vers la page de connexion
+        router.replace('/login');
+      } else {
+        setError(`Échec de l'inscription. Données envoyées: ${JSON.stringify(formData)}. Réponse reçue: ${JSON.stringify(response.data)}`);
+      }
+    } catch (err) {
+      setError(`Erreur lors de l'inscription. Données envoyées: ${JSON.stringify(formData)}. Erreur: ${err.message}`);
+    }
   };
 
   return (
@@ -217,4 +242,4 @@ const styles = StyleSheet.create({
     color: theme.colors.primary,
     fontSize: 16,
   },
-}); 
+});

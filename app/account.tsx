@@ -3,12 +3,54 @@ import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useState, useEffect } from 'react';
 import * as ImagePicker from 'expo-image-picker';
+import axiosInstance from '@/api/axiosInstance'; // Import the Axios instance
+import AsyncStorage from '@react-native-async-storage/async-storage'; // Import AsyncStorage
 
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { theme } from '@/constants/theme';
 import { User, USER_DATA } from '@/constants/user';
 import { useUI } from '@/contexts/UIContext';
+
+const fetchUserProfile = async () => {
+  try {
+    const token = await AsyncStorage.getItem('token');
+    const response = await axiosInstance.get('/api/auth/profile', {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching user profile:', error);
+    return null;
+  }
+};
+
+const updateUserProfile = async (profile) => {
+  try {
+    const token = await AsyncStorage.getItem('token');
+    const formData = new FormData();
+    formData.append('avatar', {
+      uri: profile.avatar,
+      name: 'avatar.png',
+      type: 'image/png',
+    });
+    formData.append('firstName', profile.firstName);
+    formData.append('lastName', profile.lastName);
+
+    const response = await axiosInstance.put('/api/auth/account', formData, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error updating user profile:', error);
+    return null;
+  }
+};
 
 export default function AccountScreen() {
   const router = useRouter();
@@ -19,10 +61,18 @@ export default function AccountScreen() {
 
   useEffect(() => {
     setFloatingCartVisible(false);
+    const loadUserProfile = async () => {
+      const userProfile = await fetchUserProfile();
+      if (userProfile) {
+        setProfile(userProfile);
+        setEditedProfile(userProfile);
+      }
+    };
+    loadUserProfile();
     return () => setFloatingCartVisible(true);
   }, []);
 
-  const handleSave = () => {
+  const handleSave = async () => {
     // Ici, vous pourriez ajouter une validation des données
     if (!editedProfile.email.includes('@')) {
       Alert.alert('Erreur', 'Veuillez entrer une adresse email valide');
@@ -30,9 +80,11 @@ export default function AccountScreen() {
     }
     
     // Dans une vraie application, vous enverriez ces données à votre API
-    console.log('Saving profile:', editedProfile);
-    setProfile(editedProfile);
-    setIsEditing(false);
+    const updatedProfile = await updateUserProfile(editedProfile);
+    if (updatedProfile) {
+      setProfile(updatedProfile);
+      setIsEditing(false);
+    }
   };
 
   const handleImagePick = async () => {
@@ -286,4 +338,4 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginLeft: theme.spacing.sm,
   },
-}); 
+});
