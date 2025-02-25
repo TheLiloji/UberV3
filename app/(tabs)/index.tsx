@@ -55,10 +55,10 @@ const CATEGORIES = [
   },
   {
     id: '5',
-    name: 'Oriental',
+    name: 'Tradition',
     image: 'https://i.imgur.com/9xhdKSE.png',
     type: 'category',
-    tag: 'oriental',
+    tag: 'tradition',
     bannerImage: 'https://i.imgur.com/qTCnRcS.png',
   },
   {

@@ -19,39 +19,6 @@ interface MenuItem {
   options?: { name: string; choices: { id: string; name: string; price: number }[] }[];
 }
 
-const MENU_ITEMS: MenuItem[] = [
-  {
-    id: '1',
-    name: 'Entrées',
-    category: 'starters',
-    description: 'Nos entrées signature',
-    price: 0,
-  },
-  {
-    id: '2',
-    name: 'Salade César',
-    category: 'starters',
-    description: 'Laitue romaine, croûtons, parmesan, sauce césar maison',
-    price: 9.90,
-    image: 'https://picsum.photos/200/200?random=7',
-  },
-  {
-    id: '3',
-    name: 'Plat Principal',
-    category: 'main',
-    description: 'Nos spécialités',
-    price: 0,
-  },
-  {
-    id: '4',
-    name: 'Steak Frites',
-    category: 'main',
-    description: 'Steak de bœuf, frites maison, sauce au poivre',
-    price: 18.90,
-    image: 'https://picsum.photos/200/200?random=8',
-  },
-];
-
 export default function RestaurantScreen() {
   const { id: restaurantId } = useLocalSearchParams();
   const router = useRouter();
@@ -86,7 +53,6 @@ export default function RestaurantScreen() {
   const handleAddToCart = (item: MenuItem) => {
     if (item.options && item.options.length > 0) {
       setSelectedItem(item);
-      // Initialiser les options avec les premiers choix
       const initialOptions = item.options.reduce((acc, opt) => {
         acc[opt.name] = opt.choices[0].id;
         return acc;
@@ -100,6 +66,7 @@ export default function RestaurantScreen() {
         image: item.image,
         restaurantId: restaurant?.id,
         restaurantName: restaurant?.name,
+        options: selectedOptions,
       });
     }
   };
@@ -266,6 +233,46 @@ export default function RestaurantScreen() {
           )}
         </View>
       </TouchableOpacity>
+    );
+  };
+
+  const renderAddToCartButton = (item: MenuItem) => {
+    const quantity = getItemQuantity(item.id, restaurant?.id);
+    const selectedOptionNames = Object.keys(selectedOptions).map(optionName => {
+      const choiceId = selectedOptions[optionName];
+      const choice = item.options?.find(opt => opt.name === optionName)?.choices.find(c => c.id === choiceId);
+      return choice ? `${choice.name}` : null;
+    }).filter(Boolean); // Filtrer les valeurs nulles
+
+    return (
+      <View style={styles.buttonContainer}>
+        {selectedOptionNames.length > 0 && (
+          <ThemedText style={styles.selectedOptionText}>
+            {`Option choisie: ${selectedOptionNames.join(', ')}`} {/* Afficher les options choisies */}
+          </ThemedText>
+        )}
+        <View style={styles.quantityControls}>
+          <TouchableOpacity
+            style={styles.addButton}
+            onPress={() => handleAddToCart(item)}
+          >
+            <ThemedText style={styles.addButtonText}>+</ThemedText>
+          </TouchableOpacity>
+          {quantity > 0 && (
+            <ThemedText style={styles.quantityText}>{quantity}</ThemedText>
+          )}
+          <TouchableOpacity
+            style={styles.removeButton}
+            onPress={() => {
+              if (quantity > 0) {
+                removeFromCart(item.id, restaurant?.id);
+              }
+            }}
+          >
+            <ThemedText style={styles.removeButtonText}>-</ThemedText>
+          </TouchableOpacity>
+        </View>
+      </View>
     );
   };
 
@@ -566,5 +573,28 @@ const styles = StyleSheet.create({
   optionsText: {
     fontSize: 12,
     color: theme.colors.primary,
+  },
+  buttonContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  removeButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: 'white',
+    justifyContent: 'center',
+    alignItems: 'center',
+    margin: 2,
+  },
+  removeButtonText: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: theme.colors.primary,
+  },
+  selectedOptionText: {
+    fontSize: 12,
+    color: theme.colors.primary,
+    marginLeft: 8,
   },
 }); 
