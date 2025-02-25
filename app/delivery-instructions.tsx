@@ -4,6 +4,8 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import MapView, { Marker } from 'react-native-maps';
+import axiosInstance from '@/api/axiosInstance';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
@@ -16,7 +18,10 @@ type DropoffOption = 'frontdoor' | 'reception';
 export default function DeliveryInstructionsScreen() {
   const router = useRouter();
   const { selectedAddress, latitude, longitude, deliveryInstructions, deliveryMethod: initialDeliveryMethod } = useLocalSearchParams();
+  
+  // Renommez la variable d'état pour éviter le conflit
   const [deliveryMethod, setDeliveryMethod] = useState<DeliveryMethod | null>(initialDeliveryMethod as DeliveryMethod || null);
+  
   const [handDeliveryOption, setHandDeliveryOption] = useState<HandDeliveryOption | null>(null);
   const [dropoffOption, setDropoffOption] = useState<DropoffOption | null>(null);
   const [instructions, setInstructions] = useState(deliveryInstructions as string || '');
@@ -64,18 +69,42 @@ export default function DeliveryInstructionsScreen() {
     }
   };
 
-  const handleSubmit = () => {
-    // Ici, vous pourriez sauvegarder les préférences de livraison
-    console.log({
-      deliveryMethod,
-      option: deliveryMethod === 'hand' ? handDeliveryOption : dropoffOption,
-      instructions,
-      photo,
-    });
-    router.push({
-      pathname: '/',
-      params: { selectedAddress }
-    });
+  const handleSubmit = async () => {
+    const token = await AsyncStorage.getItem('token');
+    if (!token) {
+      alert('Token d\'authentification manquant. Veuillez vous reconnecter.');
+      return;
+    }
+
+    // Créer l'objet d'adresse à enregistrer
+    const newAddress = {
+      label: 'Nouvelle adresse',
+      address: selectedAddress,
+      coordinates: {
+        latitude: parseFloat(latitude as string),
+        longitude: parseFloat(longitude as string),
+      },
+      deliveryInstructions: instructions,
+      deliveryMethod: deliveryMethod,
+      deliveryOption: deliveryMethod === 'hand' ? handDeliveryOption : dropoffOption,
+      icon: 'location',
+    };
+
+    console.log(JSON.stringify(newAddress, null, 2));
+
+    try {
+      const response = await axiosInstance.post('/api/addresses', newAddress, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      console.log('Adresse enregistrée avec succès:', response.data);
+      router.push({ pathname: '/', params: { selectedAddress } });
+    } catch (error) {
+      console.error('Erreur lors de l\'enregistrement de l\'adresse:', error);
+      alert('Erreur lors de l\'enregistrement de l\'adresse');
+    }
   };
 
   return (

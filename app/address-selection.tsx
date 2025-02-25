@@ -131,10 +131,31 @@ export default function AddressSelectionScreen() {
     });
   };
 
-  const handleAddAddress = async (newAddress) => {
-    const addedAddress = await addAddress(newAddress);
-    if (addedAddress) {
-      setAddresses([...addresses, { id: addedAddress.addressId, ...newAddress }]);
+  const handleAddAddress = async (data, details) => {
+    if (details) {
+      const formattedAddress = details.formatted_address;
+      const coordinates = {
+        latitude: details.geometry.location.lat,
+        longitude: details.geometry.location.lng,
+      };
+
+      // Vérification pour s'assurer que l'adresse est complète
+      if (!formattedAddress.match(/^\d+\s[A-z]+\s[A-z]+/)) {
+        alert("Veuillez sélectionner une adresse complète.");
+        return; // Ne pas ajouter l'adresse si elle n'est pas complète
+      }
+
+      // Naviguer vers la page des instructions de livraison et passer les paramètres
+      router.push({
+        pathname: '/delivery-instructions',
+        params: {
+          selectedAddress: formattedAddress,
+          latitude: coordinates.latitude,
+          longitude: coordinates.longitude,
+          deliveryInstructions: '', // Passer les instructions si nécessaire
+          deliveryMethod: 'hand', // Passer une valeur par défaut ou ajuster selon vos besoins
+        }
+      });
     }
   };
 
@@ -168,47 +189,21 @@ export default function AddressSelectionScreen() {
           },
           icon: 'location', // Default icon
         });
+
+        // Naviguer vers la page des instructions de livraison avec les informations
         router.push({
-          pathname: '/delivery-method',
+          pathname: '/delivery-instructions',
           params: {
-            label: 'Nouvelle adresse',
-            address: formattedAddress,
+            selectedAddress: formattedAddress, // Passer l'adresse formatée
             latitude: location.coords.latitude.toString(),
             longitude: location.coords.longitude.toString(),
             icon: 'location',
-            mode: 'add',
+            deliveryInstructions: '', // Passer les instructions si nécessaire
+            deliveryMethod: 'hand', // Passer une valeur par défaut ou ajuster selon vos besoins
           }
         });
       } else {
-        // Fallback sur la géolocalisation Expo
-        const address = await Location.reverseGeocodeAsync({
-          latitude: location.coords.latitude,
-          longitude: location.coords.longitude,
-        });
-
-        if (address[0]) {
-          const formattedAddress = `${address[0].street}, ${address[0].city}`;
-          setCurrentLocation({
-            label: 'Nouvelle adresse',
-            address: formattedAddress,
-            coordinates: {
-              latitude: location.coords.latitude,
-              longitude: location.coords.longitude,
-            },
-            icon: 'location', // Default icon
-          });
-          router.push({
-            pathname: '/delivery-method',
-            params: {
-              label: 'Nouvelle adresse',
-              address: formattedAddress,
-              latitude: location.coords.latitude.toString(),
-              longitude: location.coords.longitude.toString(),
-              icon: 'location',
-              mode: 'add',
-            }
-          });
-        }
+        alert('Aucune adresse trouvée pour la position actuelle.');
       }
     } catch (error) {
       alert('Erreur lors de la récupération de la position');
@@ -236,14 +231,7 @@ export default function AddressSelectionScreen() {
           <GooglePlacesAutocomplete
             placeholder="Saisir une adresse"
             onPress={(data, details = null) => {
-              handleAddAddress({
-                label: 'Nouvelle adresse',
-                address: data.description,
-                coordinates: {
-                  latitude: details?.geometry?.location.lat || 48.866667,
-                  longitude: details?.geometry?.location.lng || 2.333333,
-                }
-              });
+              handleAddAddress(data, details);
             }}
             query={{
               key: GOOGLE_PLACES_API_KEY,
