@@ -264,16 +264,8 @@ const OrderCard = ({ order }: { order: Order }) => {
 
   // Fonction pour extraire l'adresse de livraison de manière sécurisée
   const getDeliveryAddress = () => {
-    if (typeof order.deliveryAddress === 'string') {
-      return order.deliveryAddress;
-    }
-    
-    if (order.deliveryAddress && typeof order.deliveryAddress === 'object' && 'address' in order.deliveryAddress) {
-      return order.deliveryAddress.address;
-    }
-    
-    if (typeof order.address === 'string') {
-      return order.address;
+    if (order.address.address && typeof order.address.address === 'string') {
+      return order.address.address;
     }
     
     return 'Adresse inconnue';
@@ -333,26 +325,6 @@ const OrderCard = ({ order }: { order: Order }) => {
                   </ThemedText>
                 </View>
               </View>
-              
-              {/* Afficher directement les articles sans utiliser de fonction */}
-              <View style={styles.orderItems}>
-                {restaurant.items && restaurant.items.length > 0 ? (
-                  restaurant.items.map((item, itemIndex) => (
-                    <View key={`${restaurant.id}-item-${itemIndex}`} style={styles.orderItemContainer}>
-                      <View style={styles.orderItemHeader}>
-                        <ThemedText style={styles.orderItem}>
-                          {item.quantity}x {item.name}
-                        </ThemedText>
-                        <ThemedText style={styles.itemPrice}>
-                          {(item.price * item.quantity).toFixed(2)}€
-                        </ThemedText>
-                      </View>
-                    </View>
-                  ))
-                ) : (
-                  <ThemedText>Aucun article</ThemedText>
-                )}
-              </View>
             </View>
           );
         })}
@@ -411,8 +383,8 @@ const OrderCard = ({ order }: { order: Order }) => {
             </View>
             
             <View style={styles.orderItems}>
-              {restaurant.items && restaurant.items.length > 0 ? 
-                restaurant.items.map(renderOrderItem) : 
+              {order.items && order.items.length > 0 ? 
+                order.items.map(renderOrderItem) : 
                 <ThemedText>Aucun article</ThemedText>
               }
             </View>
