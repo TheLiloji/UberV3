@@ -240,8 +240,9 @@ export const OrderSuccessAnimation = ({ visible, orderNumber, onClose }: OrderSu
                 />
               </View>
               <ThemedText style={styles.title}>Commande envoyée !</ThemedText>
+              <ThemedText style={styles.orderNumber}>Commande #{orderNumber}</ThemedText>
               <ThemedText style={styles.message}>
-                Votre commande #{orderNumber} a été envoyée aux restaurants.
+                Votre commande a été envoyée aux restaurants.
               </ThemedText>
             </>
           )}
@@ -297,6 +298,7 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.background,
     borderRadius: 20,
     padding: 24,
+    paddingTop: 30,
     alignItems: 'center',
     width: contentWidth,
     shadowColor: '#000',
@@ -343,6 +345,15 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginBottom: 16,
     textAlign: 'center',
+    width: '100%',
+    paddingTop: 8,
+    lineHeight: 34,
+  },
+  orderNumber: {
+    fontSize: 20,
+    marginBottom: 15,
+    textAlign: 'center',
+    paddingTop: 4,
   },
   message: {
     fontSize: 18,
@@ -350,5 +361,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     color: theme.colors.textSecondary,
     lineHeight: 24,
+    paddingHorizontal: 20,
+    paddingTop: 4,
   },
 }); 

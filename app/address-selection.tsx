@@ -12,6 +12,7 @@ import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { theme } from '@/constants/theme';
 import { useSettings } from '@/contexts/SettingsContext';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface SavedAddress {
   id: string;
@@ -112,6 +113,7 @@ export default function AddressSelectionScreen() {
   const [addresses, setAddresses] = useState<SavedAddress[]>([]);
   const [currentLocation, setCurrentLocation] = useState(null);
   const { isLocationPermissionGranted } = useSettings();
+  const { t } = useTranslation();
 
   useEffect(() => {
     const loadAddresses = async () => {
@@ -176,11 +178,11 @@ export default function AddressSelectionScreen() {
       
       if (!locationPermissionGranted) {
         Alert.alert(
-          "Localisation désactivée",
-          "La localisation est désactivée dans les paramètres de l'application. Veuillez l'activer pour utiliser cette fonctionnalité.",
+          t('address.locationDisabled'),
+          t('address.locationDisabledMessage'),
           [
-            { text: "Annuler", style: "cancel" },
-            { text: "Aller aux paramètres", onPress: () => router.push('/settings') }
+            { text: t('common.cancel'), style: "cancel" },
+            { text: t('address.goToSettings'), onPress: () => router.push('/settings') }
           ]
         );
         return;
@@ -226,7 +228,7 @@ export default function AddressSelectionScreen() {
       }
     } catch (error) {
       console.error("Erreur lors de la récupération de la position:", error);
-      alert('Erreur lors de la récupération de la position');
+      alert(t('address.locationError'));
     } finally {
       setLoading(false);
     }
