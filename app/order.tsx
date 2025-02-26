@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { StyleSheet, View, ScrollView, TouchableOpacity, SafeAreaView, Platform, StatusBar as RNStatusBar, Image } from 'react-native';
+import { StyleSheet, View, ScrollView, TouchableOpacity, SafeAreaView, Platform, StatusBar as RNStatusBar, Image, Modal, TextInput, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { StatusBar } from 'expo-status-bar';
@@ -70,6 +70,8 @@ export default function OrderScreen() {
   const [savedMethods, setSavedMethods] = useState(SAVED_METHODS);
   const [lastAddress, setLastAddress] = useState<Address | null>(null);
   const [loadingAddress, setLoadingAddress] = useState(true);
+  const [deliveryInstructions, setDeliveryInstructions] = useState('');
+  const [showInstructionsModal, setShowInstructionsModal] = useState(false);
   
   // Grouper les articles par restaurant
   const groupedItems = items.reduce((groups, item) => {
@@ -156,44 +158,83 @@ export default function OrderScreen() {
   };
 
   const handleOrderSubmit = async () => {
-    setLoading(true);
-    const token = await AsyncStorage.getItem('token');
-    if (!token) {
-      alert('Token d\'authentification manquant. Veuillez vous reconnecter.');
-      setLoading(false);
-      return;
-    }
-
-    // Créer un objet de commande avec les articles groupés par restaurant
+    // Générer un numéro de commande aléatoire
+    const orderNumber = Math.floor(100000 + Math.random() * 900000).toString();
+    
+    // Obtenir la date actuelle formatée
+    const currentDate = new Date();
+    const formattedDate = currentDate.toLocaleString('fr-FR', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+    
+    // Créer l'objet de commande avec toutes les informations nécessaires
     const orderData = {
-      restaurants: Object.entries(groupedItems).map(([restaurantId, restaurant]: [string, any]) => ({
-        restaurantId,
-        restaurantName: restaurant.name,
-        items: restaurant.items,
+      orderNumber,
+      date: formattedDate,
+      items: items,
+      address: lastAddress,
+      paymentMethod,
+      subtotal: getTotalWithFees(),
+      deliveryFees: DELIVERY_FEES,
+      total: getTotalWithFees(),
+      status: 'En préparation',
+      deliveryInstructions,
+      restaurants: Object.values(groupedItems).map(restaurant => ({
+        name: restaurant.name,
+        image: restaurant.image,
         subtotal: restaurant.subtotal,
         deliveryFee: restaurant.deliveryFee
-      })),
-      total: getTotalWithFees(),
-      paymentMethod,
-      deliveryAddress: lastAddress,
+      }))
     };
 
-    try {
-      const response = await axiosInstance.post('/api/orders', orderData, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      if (response.data) {
-        alert('Commande passée avec succès !');
-        clearCart();
-        router.push('/'); // Rediriger vers la page d'accueil ou une page de confirmation
+    // Afficher les informations complètes de la commande dans la console
+    console.log('Commande complète:', JSON.stringify({
+      ...orderData,
+      cartContext: {
+        items: items,
+        total: getTotalWithFees(),
+        date: formattedDate
       }
-    } catch (err) {
-      console.error('Erreur lors de la soumission de la commande:', err);
-      setError('Erreur lors de la soumission de la commande. Veuillez réessayer.');
-    } finally {
+    }, null, 2));
+
+    try {
+      // Simuler une requête API
+      setLoading(true);
+      
+      // Log détaillé avant de soumettre la commande
+      console.log('Articles dans le panier:', JSON.stringify({
+        items: items,
+        groupedItems: groupedItems,
+        total: getTotalWithFees(),
+        date: formattedDate,
+        orderNumber: orderNumber
+      }, null, 2));
+      
+      // Stocker la commande dans AsyncStorage pour pouvoir l'afficher dans l'historique
+      const existingOrdersString = await AsyncStorage.getItem('orders');
+      const existingOrders = existingOrdersString ? JSON.parse(existingOrdersString) : [];
+      const updatedOrders = [orderData, ...existingOrders];
+      await AsyncStorage.setItem('orders', JSON.stringify(updatedOrders));
+      
+      // Vider le panier
+      clearCart();
+      
+      
+      // Rediriger vers la page d'accueil avec un paramètre pour déclencher l'animation
+      router.replace({
+        pathname: '/',
+        params: { 
+          orderSuccess: 'true',
+          orderNumber: orderData.orderNumber
+        }
+      });
+    } catch (error) {
+      console.error('Erreur lors de la commande:', error);
+      setError('Une erreur est survenue lors de la commande. Veuillez réessayer.');
       setLoading(false);
     }
   };
@@ -228,6 +269,12 @@ export default function OrderScreen() {
     // Réactiver le panier flottant avant de naviguer
     setFloatingCartVisible(true);
     router.push('/payment-methods');
+  };
+
+  const handleAddInstructions = () => {
+    setShowInstructionsModal(false);
+    // Vous pourriez vouloir sauvegarder ces instructions quelque part
+    // ou les inclure dans l'objet de commande lors de la soumission
   };
 
   return (
@@ -379,15 +426,31 @@ export default function OrderScreen() {
 
         {/* Instructions de livraison */}
         <ThemedView style={styles.sectionContainer}>
-          <ThemedText style={styles.sectionTitle}>Instructions de livraison</ThemedText>
+          <ThemedText style={styles.sectionTitle}>Instructions de livraison supplémentaires</ThemedText>
           
-          <TouchableOpacity 
-            style={styles.instructionsButton}
-            onPress={() => router.push('/delivery-instructions')}
-          >
-            <Ionicons name="create-outline" size={24} color={theme.colors.primary} />
-            <ThemedText style={styles.instructionsText}>Ajouter des instructions</ThemedText>
-          </TouchableOpacity>
+          <View style={styles.instructionsContainer}>
+            {deliveryInstructions ? (
+              <>
+                <ThemedText style={styles.instructionsText}>
+                  {deliveryInstructions}
+                </ThemedText>
+                <TouchableOpacity 
+                  style={styles.editInstructionsButton}
+                  onPress={() => setShowInstructionsModal(true)}
+                >
+                  <ThemedText style={styles.editInstructionsText}>Modifier</ThemedText>
+                </TouchableOpacity>
+              </>
+            ) : (
+              <TouchableOpacity 
+                style={styles.addInstructionsButton}
+                onPress={() => setShowInstructionsModal(true)}
+              >
+                <Ionicons name="create-outline" size={24} color={theme.colors.primary} />
+                <ThemedText style={styles.addInstructionsText}>Ajouter des instructions supplémentaires</ThemedText>
+              </TouchableOpacity>
+            )}
+          </View>
         </ThemedView>
 
         {/* Total */}
@@ -412,6 +475,44 @@ export default function OrderScreen() {
 
         {error ? <ThemedText style={styles.errorText}>{error}</ThemedText> : null}
       </ScrollView>
+
+      <Modal
+        visible={showInstructionsModal}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={() => setShowInstructionsModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <ThemedText style={styles.modalTitle}>Instructions de livraison</ThemedText>
+            
+            <TextInput
+              style={styles.instructionsInput}
+              value={deliveryInstructions}
+              onChangeText={setDeliveryInstructions}
+              placeholder="Ex: Sonner à l'interphone, laisser devant la porte..."
+              multiline={true}
+              numberOfLines={4}
+            />
+            
+            <View style={styles.modalButtons}>
+              <TouchableOpacity 
+                style={styles.cancelButton}
+                onPress={() => setShowInstructionsModal(false)}
+              >
+                <ThemedText style={styles.cancelButtonText}>Annuler</ThemedText>
+              </TouchableOpacity>
+              
+              <TouchableOpacity 
+                style={styles.saveButton}
+                onPress={handleAddInstructions}
+              >
+                <ThemedText style={styles.saveButtonText}>Enregistrer</ThemedText>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -629,16 +730,38 @@ const styles = StyleSheet.create({
     color: theme.colors.primary,
     fontSize: 16,
   },
-  instructionsButton: {
+  instructionsContainer: {
+    marginTop: 8,
+  },
+  instructionsText: {
+    fontSize: 16,
+    color: theme.colors.text,
+    marginBottom: 8,
+  },
+  editInstructionsButton: {
+    alignSelf: 'flex-start',
+    paddingVertical: 4,
+    paddingHorizontal: 12,
+    backgroundColor: '#FFE5B940',
+    borderRadius: 16,
+  },
+  editInstructionsText: {
+    color: theme.colors.primary,
+    fontSize: 14,
+  },
+  addInstructionsButton: {
     flexDirection: 'row',
     alignItems: 'center',
     padding: 12,
-    borderWidth: 1,
-    borderColor: theme.colors.border,
+    backgroundColor: '#FFE5B920',
     borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#FFE5B9',
+    borderStyle: 'dashed',
   },
-  instructionsText: {
+  addInstructionsText: {
     marginLeft: 12,
+    color: theme.colors.primary,
     fontSize: 16,
   },
   totalContainer: {
@@ -716,18 +839,57 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '500',
   },
-  addAddressButton: {
-    flexDirection: 'row',
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
     alignItems: 'center',
-    padding: 12,
+    padding: 20,
+  },
+  modalContent: {
+    backgroundColor: theme.colors.background,
+    borderRadius: 12,
+    padding: 20,
+    width: '100%',
+    maxWidth: 500,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 16,
+  },
+  instructionsInput: {
     borderWidth: 1,
     borderColor: theme.colors.border,
     borderRadius: 8,
-    borderStyle: 'dashed',
-  },
-  addAddressText: {
-    marginLeft: 12,
-    color: theme.colors.primary,
+    padding: 12,
     fontSize: 16,
+    minHeight: 100,
+    textAlignVertical: 'top',
+  },
+  modalButtons: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    marginTop: 16,
+  },
+  cancelButton: {
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    marginRight: 12,
+  },
+  cancelButtonText: {
+    color: theme.colors.textSecondary,
+    fontSize: 16,
+  },
+  saveButton: {
+    backgroundColor: theme.colors.primary,
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+  },
+  saveButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: 'bold',
   },
 }); 

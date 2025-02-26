@@ -1,6 +1,6 @@
 import 'react-native-get-random-values';
 import { useState, useEffect } from 'react';
-import { StyleSheet, TouchableOpacity, ScrollView, View, StatusBar } from 'react-native';
+import { StyleSheet, TouchableOpacity, ScrollView, View, StatusBar, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import * as Location from 'expo-location';
@@ -11,6 +11,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage'; // Import 
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { theme } from '@/constants/theme';
+import { useSettings } from '@/contexts/SettingsContext';
 
 interface SavedAddress {
   id: string;
@@ -110,6 +111,7 @@ export default function AddressSelectionScreen() {
   const [loading, setLoading] = useState(false);
   const [addresses, setAddresses] = useState<SavedAddress[]>([]);
   const [currentLocation, setCurrentLocation] = useState(null);
+  const { isLocationPermissionGranted } = useSettings();
 
   useEffect(() => {
     const loadAddresses = async () => {
@@ -168,14 +170,23 @@ export default function AddressSelectionScreen() {
   };
 
   const getCurrentLocation = async () => {
-    setLoading(true);
     try {
-      const { status } = await Location.requestForegroundPermissionsAsync();
-      if (status !== 'granted') {
-        alert('Permission de localisation refusée');
+      // Vérifier si la localisation est activée dans les paramètres
+      const locationPermissionGranted = await isLocationPermissionGranted();
+      
+      if (!locationPermissionGranted) {
+        Alert.alert(
+          "Localisation désactivée",
+          "La localisation est désactivée dans les paramètres de l'application. Veuillez l'activer pour utiliser cette fonctionnalité.",
+          [
+            { text: "Annuler", style: "cancel" },
+            { text: "Aller aux paramètres", onPress: () => router.push('/settings') }
+          ]
+        );
         return;
       }
-
+      
+      setLoading(true);
       const location = await Location.getCurrentPositionAsync({
         accuracy: Location.Accuracy.High,
       });
@@ -214,8 +225,8 @@ export default function AddressSelectionScreen() {
         alert('Aucune adresse trouvée pour la position actuelle.');
       }
     } catch (error) {
+      console.error("Erreur lors de la récupération de la position:", error);
       alert('Erreur lors de la récupération de la position');
-      console.error(error);
     } finally {
       setLoading(false);
     }

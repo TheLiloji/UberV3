@@ -1,11 +1,21 @@
 import { StyleSheet, TouchableOpacity, Switch, ScrollView, View, SafeAreaView, Platform, StatusBar, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { theme } from '@/constants/theme';
+import { useSettings } from '@/contexts/SettingsContext';
+
+interface SettingOption {
+  id: string;
+  label: string;
+  icon: any;
+  type: 'toggle' | 'select' | 'screen';
+  value?: any;
+  screen?: string;
+}
 
 const SETTINGS_OPTIONS = [
   {
@@ -42,52 +52,66 @@ const SETTINGS_OPTIONS = [
 
 export default function SettingsScreen() {
   const router = useRouter();
-  const [settings, setSettings] = useState<SettingOption[]>([
-    {
-      id: 'notifications',
-      label: 'Notifications',
-      icon: 'notifications-outline',
-      value: true,
-      type: 'toggle'
-    },
-    {
-      id: 'language',
-      label: 'Langue',
-      icon: 'language-outline',
-      value: 'Français',
-      type: 'select'
-    },
-    {
-      id: 'location',
-      label: 'Localisation',
-      icon: 'location-outline',
-      value: 'Activée',
-      type: 'toggle'
-    },
-    {
-      id: 'privacy',
-      label: 'Confidentialité',
-      icon: 'shield-checkmark-outline',
-      screen: 'privacy',
-      type: 'screen'
-    },
-    {
-      id: 'about',
-      label: 'À propos',
-      icon: 'information-circle-outline',
-      screen: 'about',
-      type: 'screen'
-    },
-  ]);
+  const { 
+    notificationsEnabled, 
+    locationEnabled, 
+    language, 
+    toggleNotifications, 
+    toggleLocation, 
+    setLanguage 
+  } = useSettings();
+  
+  const [settings, setSettings] = useState<SettingOption[]>([]);
 
-  const handleSettingPress = (setting: SettingOption) => {
+  // Initialiser les paramètres avec les valeurs du contexte
+  useEffect(() => {
+    setSettings([
+      {
+        id: 'notifications',
+        label: 'Notifications',
+        icon: 'notifications-outline',
+        value: notificationsEnabled,
+        type: 'toggle'
+      },
+      {
+        id: 'language',
+        label: 'Langue',
+        icon: 'language-outline',
+        value: language,
+        type: 'select'
+      },
+      {
+        id: 'location',
+        label: 'Localisation',
+        icon: 'location-outline',
+        value: locationEnabled,
+        type: 'toggle'
+      },
+      {
+        id: 'privacy',
+        label: 'Confidentialité',
+        icon: 'shield-checkmark-outline',
+        screen: 'privacy',
+        type: 'screen'
+      },
+      {
+        id: 'about',
+        label: 'À propos',
+        icon: 'information-circle-outline',
+        screen: 'about',
+        type: 'screen'
+      },
+    ]);
+  }, [notificationsEnabled, locationEnabled, language]);
+
+  const handleSettingPress = async (setting: SettingOption) => {
     switch (setting.type) {
       case 'toggle':
-        setSettings(current =>
-          current.map(s =>
-            s.id === setting.id ? { ...s, value: !s.value } : s
-          )
-        );
+        if (setting.id === 'notifications') {
+          await toggleNotifications();
+        } else if (setting.id === 'location') {
+          await toggleLocation();
+        }
         break;
       case 'select':
         if (setting.id === 'language') {
@@ -95,8 +119,8 @@ export default function SettingsScreen() {
             'Sélectionner la langue',
             '',
             [
-              { text: 'Français', onPress: () => updateLanguage('Français') },
-              { text: 'English', onPress: () => updateLanguage('English') },
+              { text: 'Français', onPress: () => setLanguage('Français') },
+              { text: 'English', onPress: () => setLanguage('English') },
               { text: 'Annuler', style: 'cancel' }
             ]
           );
@@ -108,14 +132,6 @@ export default function SettingsScreen() {
         }
         break;
     }
-  };
-
-  const updateLanguage = (newLanguage: string) => {
-    setSettings(current =>
-      current.map(setting =>
-        setting.id === 'language' ? { ...setting, value: newLanguage } : setting
-      )
-    );
   };
 
   return (
@@ -151,7 +167,18 @@ export default function SettingsScreen() {
                     : setting.value}
                 </ThemedText>
               </View>
+              {setting.type === 'toggle' && (
+                <Switch
+                  value={setting.value}
+                  onValueChange={() => handleSettingPress(setting)}
+                  trackColor={{ false: '#767577', true: `${theme.colors.primary}80` }}
+                  thumbColor={setting.value ? theme.colors.primary : '#f4f3f4'}
+                />
+              )}
               {setting.type === 'screen' && (
+                <Ionicons name="chevron-forward" size={24} color={theme.colors.textSecondary} />
+              )}
+              {setting.type === 'select' && (
                 <Ionicons name="chevron-forward" size={24} color={theme.colors.textSecondary} />
               )}
             </TouchableOpacity>
