@@ -12,6 +12,55 @@ import { theme } from '@/constants/theme';
 import { User, USER_DATA } from '@/constants/user';
 import { useUI } from '@/contexts/UIContext';
 
+// Fonction pour générer une couleur aléatoire mais cohérente basée sur une chaîne
+const stringToColor = (str) => {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    hash = str.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  
+  // Générer une teinte dans la gamme des oranges/jaunes pour correspondre au thème
+  const h = Math.abs(hash) % 60 + 30; // Teinte entre 30 et 90 (jaune-orange)
+  const s = 80; // Saturation à 80%
+  const l = 65; // Luminosité à 65%
+  
+  return `hsl(${h}, ${s}%, ${l}%)`;
+};
+
+// Composant pour afficher l'avatar avec l'initiale
+const InitialsAvatar = ({ email, size = 120 }) => {
+  // Obtenir la première lettre de l'email
+  const initial = email ? email.charAt(0).toUpperCase() : '?';
+  const backgroundColor = email ? stringToColor(email) : theme.colors.primary;
+  
+  return (
+    <View 
+      style={{
+        width: size,
+        height: size,
+        borderRadius: size / 2,
+        backgroundColor,
+        justifyContent: 'center',
+        alignItems: 'center',
+        overflow: 'hidden', // Assurer que le contenu ne déborde pas
+      }}
+    >
+      <ThemedText 
+        style={{
+          color: 'white',
+          fontSize: size * 0.4, // Réduire la taille de la police
+          fontWeight: 'bold',
+          textAlign: 'center',
+          lineHeight: size * 0.5, // Ajuster la hauteur de ligne
+          paddingBottom: size * 0.05, // Ajouter un petit padding en bas pour centrer visuellement
+        }}
+      >
+        {initial}
+      </ThemedText>
+    </View>
+  );
+};
+
 const fetchUserProfile = async () => {
   try {
     const token = await AsyncStorage.getItem('token');
@@ -135,16 +184,17 @@ export default function AccountScreen() {
         <ScrollView style={styles.content}>
           {/* Photo de profil */}
           <View style={styles.avatarContainer}>
-            <Image 
-              source={{ uri: isEditing ? editedProfile.avatar : profile.avatar }} 
-              style={styles.avatar}
-            />
+            {isEditing && editedProfile.avatar ? (
+              <Image source={{ uri: editedProfile.avatar }} style={styles.avatar} />
+            ) : profile.avatar ? (
+              <Image source={{ uri: profile.avatar }} style={styles.avatar} />
+            ) : (
+              <InitialsAvatar email={profile.email} size={120} />
+            )}
+            
             {isEditing && (
-              <TouchableOpacity 
-                style={styles.changePhotoButton}
-                onPress={handleImagePick}
-              >
-                <Ionicons name="camera" size={20} color="white" />
+              <TouchableOpacity style={styles.changePhotoButton} onPress={handleImagePick}>
+                <Ionicons name="camera" size={24} color="white" />
               </TouchableOpacity>
             )}
           </View>

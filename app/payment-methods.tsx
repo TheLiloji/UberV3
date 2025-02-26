@@ -42,14 +42,14 @@ const SAVED_METHODS = [
     type: 'card',
     label: 'Visa se terminant par 4242',
     icon: 'card-outline',
-    isDefault: true,
+    isDefault: false,
   },
   {
     id: '2',
     type: 'paypal',
     label: 'PayPal - john.doe@gmail.com',
     icon: 'logo-paypal',
-    isDefault: false,
+    isDefault: true,
   }
 ];
 
@@ -193,8 +193,17 @@ export default function PaymentMethodsScreen() {
     );
   };
 
+  const handlePaymentMethodSelect = (method: PaymentMethod) => {
+    // Stocker le moyen de paiement sélectionné
+    // ...
+    
+    // Revenir à l'écran précédent (l'écran de commande)
+    router.back();
+  };
+
   return (
-    <>
+    <View style={styles.container}>
+      <StatusBar style="auto" />
       <SafeAreaView style={styles.safeArea}>
         <ThemedView style={styles.container}>
           <View style={styles.header}>
@@ -276,7 +285,7 @@ export default function PaymentMethodsScreen() {
         onToggleDefault={() => selectedMethod && handleToggleDefault(selectedMethod.id)}
         onDelete={() => selectedMethod && handleDelete(selectedMethod.id)}
       />
-    </>
+    </View>
   );
 }
 

@@ -138,6 +138,71 @@ const fetchRestaurants = async () => {
   }
 };
 
+// Fonction pour générer une couleur aléatoire mais cohérente basée sur une chaîne
+const stringToColor = (str) => {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    hash = str.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  
+  // Générer une teinte dans la gamme des oranges/jaunes pour correspondre au thème
+  const h = Math.abs(hash) % 60 + 30; // Teinte entre 30 et 90 (jaune-orange)
+  const s = 80; // Saturation à 80%
+  const l = 65; // Luminosité à 65%
+  
+  return `hsl(${h}, ${s}%, ${l}%)`;
+};
+
+// Composant pour afficher l'avatar avec l'initiale
+const InitialsAvatar = ({ email, size = 40 }) => {
+  // Obtenir la première lettre de l'email
+  const initial = email ? email.charAt(0).toUpperCase() : '?';
+  const backgroundColor = email ? stringToColor(email) : theme.colors.primary;
+  
+  return (
+    <View 
+      style={{
+        width: size,
+        height: size,
+        borderRadius: size / 2,
+        backgroundColor,
+        justifyContent: 'center',
+        alignItems: 'center',
+        overflow: 'hidden',
+      }}
+    >
+      <ThemedText 
+        style={{
+          color: 'white',
+          fontSize: size * 0.4,
+          fontWeight: 'bold',
+          textAlign: 'center',
+          lineHeight: size * 0.5,
+          paddingBottom: 2,
+        }}
+      >
+        {initial}
+      </ThemedText>
+    </View>
+  );
+};
+
+// Fonction pour récupérer le profil utilisateur
+const fetchUserProfile = async () => {
+  try {
+    const token = await AsyncStorage.getItem('token');
+    const response = await axiosInstance.get('/api/auth/profile', {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching user profile:', error);
+    return null;
+  }
+};
+
 export default function HomeScreen() {
   const router = useRouter();
   const { selectedAddress } = useLocalSearchParams();
@@ -150,6 +215,7 @@ export default function HomeScreen() {
     menuItems: ReturnType<typeof getAllMenuItems>
   }>({ restaurants: [], menuItems: [] });
   const [restaurants, setRestaurants] = useState<typeof POPULAR_RESTAURANTS>([]);
+  const [userProfile, setUserProfile] = useState(null);
 
   useEffect(() => {
     if (selectedAddress) {
@@ -163,6 +229,16 @@ export default function HomeScreen() {
       setRestaurants(fetchedRestaurants);
     };
     loadRestaurants();
+  }, []);
+
+  useEffect(() => {
+    const loadUserProfile = async () => {
+      const profile = await fetchUserProfile();
+      if (profile) {
+        setUserProfile(profile);
+      }
+    };
+    loadUserProfile();
   }, []);
 
   const handleLocationPress = () => {
@@ -263,10 +339,14 @@ export default function HomeScreen() {
           style={styles.profileButton}
           onPress={() => router.push('/account')}
         >
-          <Image 
-            source={{ uri: USER_DATA.avatar }}
-            style={styles.profileImage}
-          />
+          {userProfile && userProfile.avatar ? (
+            <Image 
+              source={{ uri: userProfile.avatar }}
+              style={styles.profileImage}
+            />
+          ) : (
+            <InitialsAvatar email={userProfile ? userProfile.email : '?'} size={40} />
+          )}
         </TouchableOpacity>
       </ThemedView>
 
@@ -529,12 +609,13 @@ const styles = StyleSheet.create({
     height: 40,
     borderRadius: 20,
     overflow: 'hidden',
-    borderWidth: 2,
-    borderColor: theme.colors.primary,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   profileImage: {
-    width: '100%',
-    height: '100%',
+    width: 40,
+    height: 40,
+    borderRadius: 20,
   },
   scrollContent: {
     flex: 1,

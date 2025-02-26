@@ -145,10 +145,7 @@ export default function OrdersScreen() {
   const [activeTab, setActiveTab] = useState<'current' | 'past'>('past');
 
   const filteredOrders = ORDERS.filter(order => {
-    if (activeTab === 'current') {
-      return order.status === 'pending';
-    }
-    return order.status === 'completed';
+    return activeTab === 'current' ? order.status === 'pending' : order.status === 'completed';
   });
 
   const renderOrderItem = (item: OrderItem) => (
@@ -203,7 +200,12 @@ export default function OrdersScreen() {
 
         <ScrollView style={styles.content}>
           {filteredOrders.map(order => (
-            <OrderCard key={order.id} order={order} />
+            <View key={order.id} style={styles.orderCard}>
+              {order.items?.map(renderOrderItem)}
+              <ThemedText style={styles.totalPrice}>
+                Total: {order.totalPrice.toFixed(2)}€
+              </ThemedText>
+            </View>
           ))}
         </ScrollView>
       </ThemedView>

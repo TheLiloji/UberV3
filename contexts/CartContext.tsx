@@ -1,31 +1,30 @@
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useState, ReactNode } from 'react';
 
-interface CartItemOption {
+export interface CartItemOption {
   name: string;
   choice: {
-    id: number;
+    id: string;
     name: string;
     price: number;
   };
 }
 
-interface CartItem {
+export interface CartItem {
   id: string;
-  restaurantId: number;
-  restaurantName?: string;
   name: string;
   price: number;
   quantity: number;
-  image?: string;
   selectedOptions?: CartItemOption[];
+  restaurantId?: string;
+  restaurantName?: string;
+  restaurantImage?: string;
 }
 
 interface CartContextType {
   items: CartItem[];
-  addToCart: (item: Omit<CartItem, 'quantity'>) => void;
-  removeFromCart: (itemId: string, restaurantId?: number) => void;
-  updateQuantity: (itemId: string, quantity: number, restaurantId?: number) => void;
-  getItemQuantity: (itemId: string, restaurantId?: number) => number;
+  addToCart: (item: CartItem) => void;
+  removeFromCart: (itemId: string, restaurantId?: string, optionsKey?: string) => void;
+  updateQuantity: (itemId: string, quantity: number, restaurantId?: string, optionsKey?: string) => void;
   clearCart: () => void;
   getTotal: () => number;
   getCount: () => number;
@@ -33,65 +32,64 @@ interface CartContextType {
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
-export function CartProvider({ children }: { children: React.ReactNode }) {
+export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [items, setItems] = useState<CartItem[]>([]);
 
-  // Fonction utilitaire pour créer un ID unique
-  const createUniqueId = (itemId: string, restaurantId?: number) => {
-    return `${restaurantId}-${itemId}`;
+  const addToCart = (item: CartItem) => {
+    const newItem = {
+      ...item,
+      price: Number(item.price),
+      quantity: Number(item.quantity || 1),
+      restaurantId: String(item.restaurantId || '')
+    };
+
+    const existingItemIndex = items.findIndex(
+      (cartItem) => 
+        cartItem.id === newItem.id && 
+        cartItem.restaurantId === newItem.restaurantId &&
+        JSON.stringify(cartItem.selectedOptions) === JSON.stringify(newItem.selectedOptions)
+    );
+
+    if (existingItemIndex !== -1) {
+      const updatedItems = [...items];
+      updatedItems[existingItemIndex].quantity += newItem.quantity;
+      setItems(updatedItems);
+    } else {
+      setItems([...items, newItem]);
+    }
   };
 
-  const addToCart = (item: Omit<CartItem, 'quantity'>) => {
-    setItems(currentItems => {
-      // Créer un ID unique qui inclut les options sélectionnées
-      const optionsString = item.selectedOptions 
-        ? `-${item.selectedOptions.map(o => `${o.name}-${o.choice.id}`).join('-')}` 
-        : '';
-      const uniqueId = `${item.restaurantId}-${item.id}${optionsString}`;
+  const removeFromCart = (itemId: string, restaurantId?: string, optionsKey?: string) => {
+    if (optionsKey) {
+      setItems(items.filter((item) => {
+        if (item.id !== itemId) return true;
+        if (item.restaurantId !== restaurantId) return true;
+        return JSON.stringify(item.selectedOptions) !== optionsKey;
+      }));
+    } else if (restaurantId) {
+      setItems(items.filter((item) => !(item.id === itemId && item.restaurantId === restaurantId)));
+    } else {
+      setItems(items.filter((item) => item.id !== itemId));
+    }
+  };
+
+  const updateQuantity = (itemId: string, quantity: number, restaurantId?: string, optionsKey?: string) => {
+    const updatedItems = items.map((item) => {
+      if (item.id !== itemId) return item;
       
-      const existingItem = currentItems.find(i => {
-        const currentOptionsString = i.selectedOptions
-          ? `-${i.selectedOptions.map(o => `${o.name}-${o.choice.id}`).join('-')}`
-          : '';
-        return `${i.restaurantId}-${i.id}${currentOptionsString}` === uniqueId;
-      });
-
-      if (existingItem) {
-        return currentItems.map(i => {
-          const currentOptionsString = i.selectedOptions
-            ? `-${i.selectedOptions.map(o => `${o.name}-${o.choice.id}`).join('-')}`
-            : '';
-          return `${i.restaurantId}-${i.id}${currentOptionsString}` === uniqueId
-            ? { ...i, quantity: i.quantity + 1 }
-            : i;
-        });
+      if (restaurantId && item.restaurantId !== restaurantId) return item;
+      
+      if (optionsKey) {
+        const itemOptionsKey = JSON.stringify(item.selectedOptions);
+        if (itemOptionsKey !== optionsKey) return item;
+      } else if (item.selectedOptions && item.selectedOptions.length > 0) {
+        return item;
       }
-
-      return [...currentItems, { ...item, quantity: 1 }];
+      
+      return { ...item, quantity: Number(quantity) };
     });
-  };
-
-  const removeFromCart = (itemId: string, restaurantId?: number) => {
-    const uniqueId = createUniqueId(itemId, restaurantId);
-    setItems(currentItems => 
-      currentItems.filter(i => createUniqueId(i.id, i.restaurantId) !== uniqueId)
-    );
-  };
-
-  const updateQuantity = (itemId: string, quantity: number, restaurantId?: number) => {
-    const uniqueId = createUniqueId(itemId, restaurantId);
-    setItems(currentItems =>
-      currentItems.map(i =>
-        createUniqueId(i.id, i.restaurantId) === uniqueId
-          ? { ...i, quantity }
-          : i
-      )
-    );
-  };
-
-  const getItemQuantity = (itemId: string, restaurantId?: number) => {
-    const uniqueId = createUniqueId(itemId, restaurantId);
-    return items.find(i => createUniqueId(i.id, i.restaurantId) === uniqueId)?.quantity || 0;
+    
+    setItems(updatedItems);
   };
 
   const clearCart = () => {
@@ -99,33 +97,36 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   };
 
   const getTotal = () => {
-    return items.reduce((total, item) => total + item.price * item.quantity, 0);
+    return items.reduce((total, item) => {
+      return total + (Number(item.price) * Number(item.quantity));
+    }, 0);
   };
 
   const getCount = () => {
-    return items.reduce((count, item) => count + item.quantity, 0);
+    return items.reduce((count, item) => count + Number(item.quantity), 0);
   };
 
   return (
-    <CartContext.Provider value={{
+    <CartContext.Provider
+      value={{
       items,
       addToCart,
       removeFromCart,
       updateQuantity,
-      getItemQuantity,
+        clearCart,
       getTotal,
       getCount,
-      clearCart,
-    }}>
+      }}
+    >
       {children}
     </CartContext.Provider>
   );
-}
+};
 
-export function useCart() {
+export const useCart = () => {
   const context = useContext(CartContext);
   if (context === undefined) {
     throw new Error('useCart must be used within a CartProvider');
   }
   return context;
-} 
+}; 

@@ -1,10 +1,16 @@
-import { StyleSheet, TouchableOpacity, Image, View, ScrollView } from 'react-native';
-import { useRouter } from 'expo-router';
+import { StyleSheet, TouchableOpacity, Image, View, ScrollView, TextInput, ImageBackground } from 'react-native';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { useState, useEffect } from 'react';
+import { Platform, StatusBar } from 'react-native';
+import { AnimatedCategoryTitle } from '@/components/AnimatedCategoryTitle';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import axiosInstance from '@/api/axiosInstance';
 
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { theme } from '@/constants/theme';
+import { USER_DATA } from '@/constants/user';
 
 interface MenuOption {
   id: string;
@@ -59,20 +65,119 @@ const MENU_OPTIONS: MenuOption[] = [
   },
 ];
 
+// Fonction pour générer une couleur aléatoire mais cohérente basée sur une chaîne
+const stringToColor = (str) => {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    hash = str.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  
+  // Générer une teinte dans la gamme des oranges/jaunes pour correspondre au thème
+  const h = Math.abs(hash) % 60 + 30; // Teinte entre 30 et 90 (jaune-orange)
+  const s = 80; // Saturation à 80%
+  const l = 65; // Luminosité à 65%
+  
+  return `hsl(${h}, ${s}%, ${l}%)`;
+};
+
+// Composant pour afficher l'avatar avec l'initiale
+const InitialsAvatar = ({ email, size = 40 }) => {
+  // Obtenir la première lettre de l'email
+  const initial = email ? email.charAt(0).toUpperCase() : '?';
+  const backgroundColor = email ? stringToColor(email) : theme.colors.primary;
+  
+  return (
+    <View 
+      style={{
+        width: size,
+        height: size,
+        borderRadius: size / 2,
+        backgroundColor,
+        justifyContent: 'center',
+        alignItems: 'center',
+      }}
+    >
+      <ThemedText 
+        style={{
+          color: 'white',
+          fontSize: size * 0.5,
+          fontWeight: 'bold',
+        }}
+      >
+        {initial}
+      </ThemedText>
+    </View>
+  );
+};
+
+// Fonction pour récupérer le profil utilisateur
+const fetchUserProfile = async () => {
+  try {
+    const token = await AsyncStorage.getItem('token');
+    const response = await axiosInstance.get('/api/auth/profile', {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching user profile:', error);
+    return null;
+  }
+};
+
 export default function ExploreScreen() {
   const router = useRouter();
+  const [userProfile, setUserProfile] = useState(null);
+  
+  // Récupérer le profil utilisateur au chargement
+  useEffect(() => {
+    const loadUserProfile = async () => {
+      const profile = await fetchUserProfile();
+      if (profile) {
+        setUserProfile(profile);
+      }
+    };
+    loadUserProfile();
+  }, []);
 
   return (
-    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-      {/* En-tête avec profil */}
+    <ThemedView style={styles.container}>
       <View style={styles.header}>
-        <Image 
-          source={{ uri: 'https://picsum.photos/200' }}
-          style={styles.profileImage}
-        />
-        <View style={styles.profileInfo}>
-          <ThemedText type="title" style={styles.profileName}>John Doe</ThemedText>
-          <ThemedText style={styles.profileEmail}>john.doe@example.com</ThemedText>
+        <View style={styles.userInfo}>
+          {userProfile ? (
+            <>
+              <TouchableOpacity 
+                onPress={() => router.push('/account')}
+                style={styles.avatarContainer}
+              >
+                {userProfile.avatar ? (
+                  <Image source={{ uri: userProfile.avatar }} style={styles.avatar} />
+                ) : (
+                  <InitialsAvatar email={userProfile.email} size={40} />
+                )}
+              </TouchableOpacity>
+              <View>
+                <ThemedText style={styles.greeting}>Bonjour,</ThemedText>
+                <ThemedText style={styles.userName}>
+                  {userProfile.firstName || userProfile.email.split('@')[0]}
+                </ThemedText>
+              </View>
+            </>
+          ) : (
+            <>
+              <TouchableOpacity 
+                onPress={() => router.push('/account')}
+                style={styles.avatarContainer}
+              >
+                <InitialsAvatar email="?" size={40} />
+              </TouchableOpacity>
+              <View>
+                <ThemedText style={styles.greeting}>Bonjour,</ThemedText>
+                <ThemedText style={styles.userName}>Utilisateur</ThemedText>
+              </View>
+            </>
+          )}
         </View>
       </View>
 
@@ -99,7 +204,7 @@ export default function ExploreScreen() {
           </TouchableOpacity>
         ))}
       </View>
-    </ScrollView>
+    </ThemedView>
   );
 }
 
@@ -115,24 +220,25 @@ const styles = StyleSheet.create({
     paddingTop: 60,
     backgroundColor: theme.colors.primary,
   },
-  profileImage: {
-    width: 70,
-    height: 70,
-    borderRadius: 35,
-    borderWidth: 3,
-    borderColor: 'white',
+  userInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
-  profileInfo: {
-    marginLeft: 16,
+  avatarContainer: {
+    marginRight: 12,
   },
-  profileName: {
-    fontSize: 24,
+  avatar: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+  },
+  greeting: {
+    fontSize: 14,
+    color: theme.colors.textSecondary,
+  },
+  userName: {
+    fontSize: 16,
     fontWeight: 'bold',
-    color: 'white',
-  },
-  profileEmail: {
-    color: 'rgba(255, 255, 255, 0.8)',
-    marginTop: 4,
   },
   menuContainer: {
     padding: 16,

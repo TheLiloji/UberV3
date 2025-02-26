@@ -19,6 +19,39 @@ interface MenuItem {
   options?: { name: string; choices: { id: string; name: string; price: number }[] }[];
 }
 
+const MENU_ITEMS: MenuItem[] = [
+  {
+    id: '1',
+    name: 'Entrées',
+    category: 'starters',
+    description: 'Nos entrées signature',
+    price: 0,
+  },
+  {
+    id: '2',
+    name: 'Salade César',
+    category: 'starters',
+    description: 'Laitue romaine, croûtons, parmesan, sauce césar maison',
+    price: 9.90,
+    image: 'https://picsum.photos/200/200?random=7',
+  },
+  {
+    id: '3',
+    name: 'Plat Principal',
+    category: 'main',
+    description: 'Nos spécialités',
+    price: 0,
+  },
+  {
+    id: '4',
+    name: 'Steak Frites',
+    category: 'main',
+    description: 'Steak de bœuf, frites maison, sauce au poivre',
+    price: 18.90,
+    image: 'https://picsum.photos/200/200?random=8',
+  },
+];
+
 export default function RestaurantScreen() {
   const { id: restaurantId } = useLocalSearchParams();
   const router = useRouter();
@@ -28,6 +61,15 @@ export default function RestaurantScreen() {
   const [selectedOptions, setSelectedOptions] = useState<Record<string, number>>({});
 
   const restaurant = POPULAR_RESTAURANTS.find(r => r.id === Number(restaurantId));
+  
+  console.log('Restaurant ID:', restaurantId);
+  console.log('Restaurant trouvé:', restaurant);
+
+  useEffect(() => {
+    if (restaurant) {
+      router.setParams({ title: restaurant.name });
+    }
+  }, [restaurant]);
 
   if (!restaurant) {
     return (
@@ -37,22 +79,40 @@ export default function RestaurantScreen() {
     );
   }
 
-  useEffect(() => {
-    router.setParams({ title: restaurant.name });
-  }, [restaurant]);
-
   const filteredMenu = selectedCategory === 'all' 
     ? restaurant.menu 
     : restaurant.menu.filter(item => item.category === selectedCategory);
 
   // Fonction pour obtenir la quantité d'un item dans le panier
   const getItemQuantity = (itemId: string, restaurantId?: number) => {
-    return items.find(item => item.id === itemId && item.restaurantId === restaurantId)?.quantity || 0;
+    const stringRestaurantId = restaurantId ? String(restaurantId) : undefined;
+    console.log('Recherche item:', itemId, 'dans restaurant:', stringRestaurantId);
+    console.log('Items dans le panier:', items);
+    
+    const foundItem = items.find(item => 
+      item.id === itemId && 
+      item.restaurantId === stringRestaurantId
+    );
+    
+    console.log('Item trouvé:', foundItem);
+    return foundItem?.quantity || 0;
+  };
+
+  // Fonction pour obtenir les articles du panier avec leurs options pour un item spécifique
+  const getCartItemsWithOptions = (itemId: string, restaurantId?: number) => {
+    const stringRestaurantId = restaurantId ? String(restaurantId) : undefined;
+    
+    // Filtrer les articles du panier qui correspondent à l'ID de l'article et du restaurant
+    return items.filter(item => 
+      item.id === itemId && 
+      item.restaurantId === stringRestaurantId
+    );
   };
 
   const handleAddToCart = (item: MenuItem) => {
     if (item.options && item.options.length > 0) {
       setSelectedItem(item);
+      // Initialiser les options avec les premiers choix
       const initialOptions = item.options.reduce((acc, opt) => {
         acc[opt.name] = opt.choices[0].id;
         return acc;
@@ -66,7 +126,7 @@ export default function RestaurantScreen() {
         image: item.image,
         restaurantId: restaurant?.id,
         restaurantName: restaurant?.name,
-        options: selectedOptions,
+        restaurantImage: restaurant?.image,
       });
     }
   };
@@ -143,6 +203,7 @@ export default function RestaurantScreen() {
                     image: selectedItem.image,
                     restaurantId: restaurant?.id,
                     restaurantName: restaurant?.name,
+                    restaurantImage: restaurant?.image,
                     selectedOptions: selectedOptionsList
                   });
                   setSelectedItem(null);
@@ -158,120 +219,138 @@ export default function RestaurantScreen() {
   };
 
   // Rendu d'un item du menu
-  const renderMenuItem = (item: MenuItem) => {
-    const quantity = getItemQuantity(item.id, restaurant?.id);
-    const isSection = item.price === 0;
+  const renderMenuItem = (item: MenuItem, isSection = false) => {
+    // Vérifier si c'est une section (titre de catégorie) basé sur le prix
+    const isSectionItem = item.price === 0;
+    
+    // Si c'est une section, afficher uniquement le titre de la section
+    if (isSectionItem) {
+      return (
+        <View key={item.id} style={styles.menuSection}>
+          <ThemedText style={styles.menuSectionName}>
+            {item.name}
+          </ThemedText>
+        </View>
+      );
+    }
+    
+    // Obtenir tous les articles du panier pour cet item (avec différentes options)
+    const cartItems = getCartItemsWithOptions(item.id, restaurant?.id);
+    const hasItemsInCart = cartItems.length > 0;
+    
+    // Obtenir la quantité totale pour cet article (toutes options confondues)
+    const totalQuantity = cartItems.reduce((sum, item) => sum + item.quantity, 0);
+    
+    // Obtenir la quantité pour l'article sans options
+    const baseItemQuantity = cartItems.find(cartItem => 
+      !cartItem.selectedOptions || cartItem.selectedOptions.length === 0
+    )?.quantity || 0;
 
     return (
-      <TouchableOpacity 
-        key={item.id}
-        style={[
-          styles.menuItem,
-          isSection && styles.menuSection
-        ]}
-        onPress={() => {
-          if (isSection) return;
-          handleAddToCart(item);
-        }}
-      >
-        <View style={styles.menuItemContent}>
+      <View key={item.id} style={styles.menuItem}>
+        <TouchableOpacity
+          style={styles.menuItemContent}
+          onPress={() => handleAddToCart(item)}
+        >
           <View style={styles.menuItemInfo}>
-            <ThemedText style={[
-              styles.menuItemName,
-              isSection && styles.menuSectionName
-            ]}>
+            <ThemedText style={styles.menuItemName}>
               {item.name}
             </ThemedText>
-            {!isSection && (
-              <>
-                <ThemedText style={styles.menuItemDescription}>
-                  {item.description}
-                </ThemedText>
-                {item.options && (
-                  <ThemedView style={styles.optionsIndicator}>
-                    <ThemedText style={styles.optionsText}>
-                      Options disponibles
-                    </ThemedText>
-                  </ThemedView>
-                )}
-                <ThemedView style={styles.priceAndControls}>
-                  <ThemedText style={styles.menuItemPrice}>
-                    {item.price.toFixed(2)}€
-                  </ThemedText>
-                  {quantity > 0 && (
-                    <View style={styles.quantityControls}>
-                      <TouchableOpacity 
-                        style={styles.quantityButton}
-                        onPress={() => {
-                          if (quantity === 1) {
-                            removeFromCart(item.id, restaurant?.id);
-                          } else {
-                            updateQuantity(item.id, quantity - 1, restaurant?.id);
-                          }
-                        }}
-                      >
-                        <Ionicons name="remove" size={20} color={theme.colors.primary} />
-                      </TouchableOpacity>
-                      <ThemedText style={styles.quantityText}>{quantity}</ThemedText>
-                      <TouchableOpacity 
-                        style={styles.quantityButton}
-                        onPress={() => handleAddToCart(item)}
-                      >
-                        <Ionicons name="add" size={20} color={theme.colors.primary} />
-                      </TouchableOpacity>
-                    </View>
-                  )}
-                </ThemedView>
-              </>
-            )}
+            <ThemedText style={styles.menuItemDescription}>
+              {item.description}
+            </ThemedText>
+            <View style={styles.priceAndControls}>
+              <ThemedText style={styles.menuItemPrice}>
+                {item.price.toFixed(2)}€
+              </ThemedText>
+              
+              {/* Afficher les contrôles de quantité pour l'article de base (sans options) */}
+              {baseItemQuantity > 0 && (
+                <View style={styles.quantityControls}>
+                  <TouchableOpacity
+                    style={styles.quantityButton}
+                    onPress={(e) => {
+                      e.stopPropagation();
+                      if (baseItemQuantity === 1) {
+                        removeFromCart(item.id, String(restaurant?.id));
+                      } else {
+                        updateQuantity(item.id, baseItemQuantity - 1, String(restaurant?.id));
+                      }
+                    }}
+                  >
+                    <Ionicons name="remove" size={16} color={theme.colors.primary} />
+                  </TouchableOpacity>
+                  <ThemedText style={styles.quantityText}>{baseItemQuantity}</ThemedText>
+                  <TouchableOpacity
+                    style={styles.quantityButton}
+                    onPress={(e) => {
+                      e.stopPropagation();
+                      updateQuantity(item.id, baseItemQuantity + 1, String(restaurant?.id));
+                    }}
+                  >
+                    <Ionicons name="add" size={16} color={theme.colors.primary} />
+                  </TouchableOpacity>
+                </View>
+              )}
+              
+              {/* Afficher un indicateur si l'article a des options */}
+              {item.options && item.options.length > 0 && (
+                <View style={styles.optionsIndicator}>
+                  <ThemedText style={styles.optionsText}>Options</ThemedText>
+                </View>
+              )}
+            </View>
           </View>
-          {item.image && !isSection && (
-            <Image 
-              source={{ uri: item.image }} 
+          {item.image && (
+            <Image
+              source={{ uri: item.image }}
               style={styles.menuItemImage}
             />
           )}
-        </View>
-      </TouchableOpacity>
-    );
-  };
-
-  const renderAddToCartButton = (item: MenuItem) => {
-    const quantity = getItemQuantity(item.id, restaurant?.id);
-    const selectedOptionNames = Object.keys(selectedOptions).map(optionName => {
-      const choiceId = selectedOptions[optionName];
-      const choice = item.options?.find(opt => opt.name === optionName)?.choices.find(c => c.id === choiceId);
-      return choice ? `${choice.name}` : null;
-    }).filter(Boolean); // Filtrer les valeurs nulles
-
-    return (
-      <View style={styles.buttonContainer}>
-        {selectedOptionNames.length > 0 && (
-          <ThemedText style={styles.selectedOptionText}>
-            {`Option choisie: ${selectedOptionNames.join(', ')}`} {/* Afficher les options choisies */}
-          </ThemedText>
-        )}
-        <View style={styles.quantityControls}>
-          <TouchableOpacity
-            style={styles.addButton}
-            onPress={() => handleAddToCart(item)}
-          >
-            <ThemedText style={styles.addButtonText}>+</ThemedText>
-          </TouchableOpacity>
-          {quantity > 0 && (
-            <ThemedText style={styles.quantityText}>{quantity}</ThemedText>
-          )}
-          <TouchableOpacity
-            style={styles.removeButton}
-            onPress={() => {
-              if (quantity > 0) {
-                removeFromCart(item.id, restaurant?.id);
-              }
-            }}
-          >
-            <ThemedText style={styles.removeButtonText}>-</ThemedText>
-          </TouchableOpacity>
-        </View>
+        </TouchableOpacity>
+        
+        {/* Afficher les articles avec options dans des lignes séparées */}
+        {cartItems.filter(cartItem => 
+          cartItem.selectedOptions && cartItem.selectedOptions.length > 0
+        ).map((cartItem, index) => (
+          <View key={`${item.id}-option-${index}`} style={styles.optionItemRow}>
+            <View style={styles.optionItemInfo}>
+              <ThemedText style={styles.optionItemName}>
+                {cartItem.selectedOptions?.map(opt => `${opt.name}: ${opt.choice.name}`).join(', ')}
+              </ThemedText>
+              <ThemedText style={styles.optionItemPrice}>
+                +{cartItem.selectedOptions?.reduce((sum, opt) => sum + (opt.choice.price || 0), 0).toFixed(2)}€
+              </ThemedText>
+            </View>
+            <View style={styles.quantityControls}>
+              <TouchableOpacity
+                style={styles.quantityButton}
+                onPress={() => {
+                  if (cartItem.quantity === 1) {
+                    // Créer un identifiant unique basé sur les options sélectionnées
+                    const optionsKey = JSON.stringify(cartItem.selectedOptions);
+                    removeFromCart(item.id, String(restaurant?.id), optionsKey);
+                  } else {
+                    const optionsKey = JSON.stringify(cartItem.selectedOptions);
+                    updateQuantity(item.id, cartItem.quantity - 1, String(restaurant?.id), optionsKey);
+                  }
+                }}
+              >
+                <Ionicons name="remove" size={16} color={theme.colors.primary} />
+              </TouchableOpacity>
+              <ThemedText style={styles.quantityText}>{cartItem.quantity}</ThemedText>
+              <TouchableOpacity
+                style={styles.quantityButton}
+                onPress={() => {
+                  const optionsKey = JSON.stringify(cartItem.selectedOptions);
+                  updateQuantity(item.id, cartItem.quantity + 1, String(restaurant?.id), optionsKey);
+                }}
+              >
+                <Ionicons name="add" size={16} color={theme.colors.primary} />
+              </TouchableOpacity>
+            </View>
+          </View>
+        ))}
       </View>
     );
   };
@@ -486,12 +565,13 @@ const styles = StyleSheet.create({
     paddingBottom: 100,
   },
   menuSection: {
-    borderBottomWidth: 0,
-    paddingVertical: theme.spacing.sm,
+    paddingVertical: theme.spacing.md,
+    paddingHorizontal: theme.spacing.md,
     backgroundColor: 'transparent',
+    marginTop: theme.spacing.md,
   },
   menuSectionName: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: 'bold',
     color: theme.colors.primary,
   },
@@ -574,27 +654,27 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: theme.colors.primary,
   },
-  buttonContainer: {
+  optionItemRow: {
     flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    marginTop: 4,
+    backgroundColor: '#FFE5B920',
+    borderRadius: 8,
   },
-  removeButton: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: 'white',
-    justifyContent: 'center',
-    alignItems: 'center',
-    margin: 2,
+  optionItemInfo: {
+    flex: 1,
+    marginRight: 8,
   },
-  removeButtonText: {
-    fontSize: 16,
-    fontWeight: 'bold',
+  optionItemName: {
+    fontSize: 14,
+    color: theme.colors.textSecondary,
+  },
+  optionItemPrice: {
+    fontSize: 14,
     color: theme.colors.primary,
-  },
-  selectedOptionText: {
-    fontSize: 12,
-    color: theme.colors.primary,
-    marginLeft: 8,
+    marginTop: 2,
   },
 }); 

@@ -11,6 +11,8 @@ export default function CartScreen() {
   const router = useRouter();
   const { items, removeFromCart, updateQuantity, getTotal, clearCart } = useCart();
 
+  console.log('Articles dans le panier:', items); // Log des articles dans le panier
+
   // Grouper les articles par restaurant
   const groupedItems = items.reduce((groups, item) => {
     const restaurantId = item.restaurantId;
@@ -25,7 +27,15 @@ export default function CartScreen() {
     
     groups[restaurantId].items.push(item);
     return groups;
-  }, {} as Record<number, { name: string; items: typeof items }>);
+  }, {} as Record<string, { name: string; items: typeof items }>);
+
+  // Générer une clé unique pour chaque article en fonction de ses options
+  const getItemKey = (item, index) => {
+    if (item.selectedOptions && item.selectedOptions.length > 0) {
+      return `${item.restaurantId}-${item.id}-${JSON.stringify(item.selectedOptions)}`;
+    }
+    return `${item.restaurantId}-${item.id}-${index}`;
+  };
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -54,57 +64,62 @@ export default function CartScreen() {
                   <ThemedText style={styles.restaurantName}>
                     {restaurant.name}
                   </ThemedText>
-                  {restaurant.items.map((item) => (
-                    <ThemedView key={`${restaurantId}-${item.id}`} style={styles.cartItem}>
-                      {item.image && (
-                        <Image source={{ uri: item.image }} style={styles.itemImage} />
-                      )}
-                      <ThemedView style={styles.itemInfo}>
-                        <ThemedText style={styles.itemName}>{item.name}</ThemedText>
-                        
-                        {/* Affichage des options sélectionnées */}
-                        {item.selectedOptions && item.selectedOptions.length > 0 && (
-                          <ThemedView style={styles.optionsContainer}>
-                            {item.selectedOptions.map((option, index) => (
-                              <ThemedText key={index} style={styles.optionText}>
-                                {option.name}: {option.choice.name}
-                                {option.choice.price > 0 && ` (+${option.choice.price.toFixed(2)}€)`}
-                              </ThemedText>
-                            ))}
-                          </ThemedView>
+                  {restaurant.items.map((item, index) => {
+                    // Créer une clé unique pour chaque article
+                    const optionsKey = item.selectedOptions ? JSON.stringify(item.selectedOptions) : undefined;
+                    
+                    return (
+                      <ThemedView key={getItemKey(item, index)} style={styles.cartItem}>
+                        {item.image && (
+                          <Image source={{ uri: item.image }} style={styles.itemImage} />
                         )}
+                        <ThemedView style={styles.itemInfo}>
+                          <ThemedText style={styles.itemName}>{item.name}</ThemedText>
+                          
+                          {/* Affichage des options sélectionnées */}
+                          {item.selectedOptions && item.selectedOptions.length > 0 && (
+                            <ThemedView style={styles.optionsContainer}>
+                              {item.selectedOptions.map((option, optIndex) => (
+                                <ThemedText key={`${getItemKey(item, index)}-opt-${optIndex}`} style={styles.optionText}>
+                                  {option.name}: {option.choice.name} 
+                                  {option.choice.price > 0 && ` (+${option.choice.price.toFixed(2)}€)`}
+                                </ThemedText>
+                              ))}
+                            </ThemedView>
+                          )}
 
-                        <ThemedText style={styles.itemPrice}>
-                          {(item.price * item.quantity).toFixed(2)}€
-                        </ThemedText>
-                        <ThemedView style={styles.quantityContainer}>
-                          <TouchableOpacity
-                            onPress={() => {
-                              if (item.quantity > 1) {
-                                updateQuantity(item.id, item.quantity - 1, item.restaurantId);
-                              } else {
-                                removeFromCart(item.id, item.restaurantId);
-                              }
-                            }}
-                          >
-                            <Ionicons name="remove-circle" size={24} color={theme.colors.primary} />
-                          </TouchableOpacity>
-                          <ThemedText style={styles.quantity}>{item.quantity}</ThemedText>
-                          <TouchableOpacity
-                            onPress={() => updateQuantity(item.id, item.quantity + 1, item.restaurantId)}
-                          >
-                            <Ionicons name="add-circle" size={24} color={theme.colors.primary} />
-                          </TouchableOpacity>
+                          <ThemedText style={styles.itemPrice}>
+                            {(item.price * item.quantity).toFixed(2)}€
+                          </ThemedText>
+                          <ThemedView style={styles.quantityContainer}>
+                            <TouchableOpacity
+                              onPress={() => {
+                                if (item.quantity > 1) {
+                                  updateQuantity(item.id, item.quantity - 1, item.restaurantId, optionsKey);
+                                } else {
+                                  removeFromCart(item.id, item.restaurantId, optionsKey);
+                                }
+                              }}
+                            >
+                              <Ionicons name="remove-circle" size={24} color={theme.colors.primary} />
+                            </TouchableOpacity>
+                            <ThemedText style={styles.quantity}>{item.quantity}</ThemedText>
+                            <TouchableOpacity
+                              onPress={() => updateQuantity(item.id, item.quantity + 1, item.restaurantId, optionsKey)}
+                            >
+                              <Ionicons name="add-circle" size={24} color={theme.colors.primary} />
+                            </TouchableOpacity>
+                          </ThemedView>
                         </ThemedView>
+                        <TouchableOpacity
+                          onPress={() => removeFromCart(item.id, item.restaurantId, optionsKey)}
+                          style={styles.removeButton}
+                        >
+                          <Ionicons name="trash" size={24} color="red" />
+                        </TouchableOpacity>
                       </ThemedView>
-                      <TouchableOpacity
-                        onPress={() => removeFromCart(item.id, item.restaurantId)}
-                        style={styles.removeButton}
-                      >
-                        <Ionicons name="trash" size={24} color="red" />
-                      </TouchableOpacity>
-                    </ThemedView>
-                  ))}
+                    );
+                  })}
                 </ThemedView>
               ))}
             </ScrollView>
@@ -116,10 +131,10 @@ export default function CartScreen() {
                 <ThemedText style={styles.totalAmount}>{getTotal().toFixed(2)}€</ThemedText>
               </ThemedView>
               <TouchableOpacity 
-                style={styles.checkoutButton}
-                onPress={() => router.push('/checkout')}
+                style={styles.orderButton}
+                onPress={() => router.push('/order')}
               >
-                <ThemedText style={styles.checkoutButtonText}>Commander</ThemedText>
+                <ThemedText style={styles.orderButtonText}>Passer Commande</ThemedText>
               </TouchableOpacity>
             </ThemedView>
           </>
@@ -234,13 +249,13 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: theme.colors.primary,
   },
-  checkoutButton: {
+  orderButton: {
     backgroundColor: theme.colors.primary,
     padding: 16,
     borderRadius: 8,
     alignItems: 'center',
   },
-  checkoutButtonText: {
+  orderButtonText: {
     color: 'white',
     fontSize: 16,
     fontWeight: 'bold',

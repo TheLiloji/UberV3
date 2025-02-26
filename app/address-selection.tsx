@@ -1,6 +1,6 @@
 import 'react-native-get-random-values';
 import { useState, useEffect } from 'react';
-import { StyleSheet, TouchableOpacity, ScrollView, View } from 'react-native';
+import { StyleSheet, TouchableOpacity, ScrollView, View, StatusBar } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import * as Location from 'expo-location';
@@ -119,16 +119,24 @@ export default function AddressSelectionScreen() {
     loadAddresses();
   }, []);
 
-  const handleAddressSelect = async (savedAddress: SavedAddress) => {
-    router.push({
-      pathname: '/delivery-instructions',
-      params: { 
-        selectedAddress: savedAddress.address,
-        latitude: savedAddress.coordinates.latitude,
-        longitude: savedAddress.coordinates.longitude,
-        deliveryInstructions: savedAddress.deliveryInstructions || ''
-      }
-    });
+  const handleAddressSelect = (savedAddress) => {
+    // Vérifier d'où vient l'utilisateur
+    const previousScreen = router.canGoBack() ? 'previous' : 'home';
+    
+    if (previousScreen === 'previous') {
+      // Si l'utilisateur vient d'un autre écran (comme order.tsx), retourner à cet écran
+      // et stocker l'adresse dans AsyncStorage pour qu'elle puisse être récupérée
+      AsyncStorage.setItem('selectedAddress', savedAddress.address);
+      router.back();
+    } else {
+      // Sinon, aller à l'écran d'accueil avec l'adresse en paramètre
+      router.push({
+        pathname: '/',
+        params: { 
+          selectedAddress: savedAddress.address 
+        }
+      });
+    }
   };
 
   const handleAddAddress = async (data, details) => {
@@ -194,12 +202,12 @@ export default function AddressSelectionScreen() {
         router.push({
           pathname: '/delivery-instructions',
           params: {
-            selectedAddress: formattedAddress, // Passer l'adresse formatée
+            selectedAddress: formattedAddress,
             latitude: location.coords.latitude.toString(),
             longitude: location.coords.longitude.toString(),
             icon: 'location',
-            deliveryInstructions: '', // Passer les instructions si nécessaire
-            deliveryMethod: 'hand', // Passer une valeur par défaut ou ajuster selon vos besoins
+            deliveryInstructions: '',
+            deliveryMethod: 'hand',
           }
         });
       } else {
@@ -214,135 +222,138 @@ export default function AddressSelectionScreen() {
   };
 
   return (
-    <ThemedView style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity 
-          style={styles.backButton}
-          onPress={() => router.back()}
-        >
-          <Ionicons name="arrow-back" size={24} color={theme.colors.text} />
-        </TouchableOpacity>
-        <ThemedText style={styles.headerTitle}>Sélectionner une adresse</ThemedText>
-      </View>
-
-      <View style={styles.searchContainer}>
-        <View style={styles.searchBarWrapper}>
-          <Ionicons name="search" size={24} color="#666" style={styles.searchIcon} />
-          <GooglePlacesAutocomplete
-            placeholder="Saisir une adresse"
-            onPress={(data, details = null) => {
-              handleAddAddress(data, details);
-            }}
-            query={{
-              key: GOOGLE_PLACES_API_KEY,
-              language: 'fr',
-              components: 'country:fr',
-            }}
-            styles={{
-              container: {
-                flex: 0,
-              },
-              textInput: {
-                height: 50,
-                fontSize: 16,
-                backgroundColor: '#fff',
-                borderWidth: 1,
-                borderColor: theme.colors.primary,
-                borderRadius: 8,
-                paddingHorizontal: 16,
-                paddingLeft: 45,
-                color: '#000',
-              },
-              listView: {
-                backgroundColor: '#fff',
-                borderWidth: 1,
-                borderColor: '#f0f0f0',
-                borderRadius: 8,
-                marginTop: 8,
-                position: 'absolute',
-                top: 55,
-                left: 0,
-                right: 0,
-                zIndex: 1000,
-                elevation: 3,
-              },
-              row: {
-                padding: 15,
-                height: 'auto',
-                minHeight: 50,
-                borderBottomWidth: 1,
-                borderBottomColor: '#f0f0f0',
-              },
-              description: {
-                fontSize: 14,
-                color: '#333',
-              },
-              predefinedPlacesDescription: {
-                color: '#333',
-              },
-            }}
-            renderLeftButton={() => (
-              <View style={styles.searchIcon}>
-                <Ionicons name="search" size={24} color="#666" />
-              </View>
-            )}
-            fetchDetails={true}
-            enablePoweredByContainer={false}
-            debounce={300}
-          />
+    <View style={styles.container}>
+      <StatusBar style="auto" />
+      <ThemedView style={styles.container}>
+        <View style={styles.header}>
+          <TouchableOpacity 
+            style={styles.backButton}
+            onPress={() => router.back()}
+          >
+            <Ionicons name="arrow-back" size={24} color={theme.colors.text} />
+          </TouchableOpacity>
+          <ThemedText style={styles.headerTitle}>Sélectionner une adresse</ThemedText>
         </View>
-        
-        <TouchableOpacity 
-          style={styles.currentLocationButton}
-          onPress={getCurrentLocation}
-        >
-          <Ionicons name="locate" size={24} color={theme.colors.primary} />
-          <ThemedText style={styles.currentLocationText}>Position actuelle</ThemedText>
-        </TouchableOpacity>
-      </View>
 
-      <ScrollView style={styles.content}>
-        <View style={styles.section}>
-          <ThemedText style={styles.sectionTitle}>Adresses enregistrées</ThemedText>
-          {addresses.map((savedAddress) => (
-            <TouchableOpacity
-              key={savedAddress.id}
-              style={styles.addressItem}
-              onPress={() => handleAddressSelect(savedAddress)}
-            >
-              <View style={styles.addressIcon}>
-                <Ionicons 
-                  name={savedAddress.icon} 
-                  size={24} 
-                  color={theme.colors.primary} 
-                />
-              </View>
-              <View style={styles.addressDetails}>
-                <View style={styles.addressHeader}>
-                  <ThemedText style={styles.addressLabel}>{savedAddress.label}</ThemedText>
-                  <View style={styles.deliveryMethodBadge}>
-                    <Ionicons 
-                      name={savedAddress.deliveryMethod === 'hand' ? 'hand-left' : 'location'} 
-                      size={16} 
-                      color={theme.colors.primary} 
-                    />
-                    <ThemedText style={styles.deliveryMethodText}>
-                      {savedAddress.deliveryMethod === 'hand' ? 'En main propre' : 'À déposer'}
-                    </ThemedText>
-                  </View>
+        <View style={styles.searchContainer}>
+          <View style={styles.searchBarWrapper}>
+            <Ionicons name="search" size={24} color="#666" style={styles.searchIcon} />
+            <GooglePlacesAutocomplete
+              placeholder="Saisir une adresse"
+              onPress={(data, details = null) => {
+                handleAddAddress(data, details);
+              }}
+              query={{
+                key: GOOGLE_PLACES_API_KEY,
+                language: 'fr',
+                components: 'country:fr',
+              }}
+              styles={{
+                container: {
+                  flex: 0,
+                },
+                textInput: {
+                  height: 50,
+                  fontSize: 16,
+                  backgroundColor: '#fff',
+                  borderWidth: 1,
+                  borderColor: theme.colors.primary,
+                  borderRadius: 8,
+                  paddingHorizontal: 16,
+                  paddingLeft: 45,
+                  color: '#000',
+                },
+                listView: {
+                  backgroundColor: '#fff',
+                  borderWidth: 1,
+                  borderColor: '#f0f0f0',
+                  borderRadius: 8,
+                  marginTop: 8,
+                  position: 'absolute',
+                  top: 55,
+                  left: 0,
+                  right: 0,
+                  zIndex: 1000,
+                  elevation: 3,
+                },
+                row: {
+                  padding: 15,
+                  height: 'auto',
+                  minHeight: 50,
+                  borderBottomWidth: 1,
+                  borderBottomColor: '#f0f0f0',
+                },
+                description: {
+                  fontSize: 14,
+                  color: '#333',
+                },
+                predefinedPlacesDescription: {
+                  color: '#333',
+                },
+              }}
+              renderLeftButton={() => (
+                <View style={styles.searchIcon}>
+                  <Ionicons name="search" size={24} color="#666" />
                 </View>
-                <ThemedText style={styles.addressText}>{savedAddress.address}</ThemedText>
-                {savedAddress.deliveryInstructions && (
-                  <ThemedText style={styles.instructionsText}>
-                    {savedAddress.deliveryInstructions}
-                  </ThemedText>
-                )}
-              </View>
-            </TouchableOpacity>
-          ))}
+              )}
+              fetchDetails={true}
+              enablePoweredByContainer={false}
+              debounce={300}
+            />
+          </View>
+          
+          <TouchableOpacity 
+            style={styles.currentLocationButton}
+            onPress={getCurrentLocation}
+          >
+            <Ionicons name="locate" size={24} color={theme.colors.primary} />
+            <ThemedText style={styles.currentLocationText}>Position actuelle</ThemedText>
+          </TouchableOpacity>
         </View>
-      </ScrollView>
-    </ThemedView>
+
+        <ScrollView style={styles.content}>
+          <View style={styles.section}>
+            <ThemedText style={styles.sectionTitle}>Adresses enregistrées</ThemedText>
+            {addresses.map((savedAddress) => (
+              <TouchableOpacity
+                key={savedAddress.id}
+                style={styles.addressItem}
+                onPress={() => handleAddressSelect(savedAddress)}
+              >
+                <View style={styles.addressIcon}>
+                  <Ionicons 
+                    name={savedAddress.icon} 
+                    size={24} 
+                    color={theme.colors.primary} 
+                  />
+                </View>
+                <View style={styles.addressDetails}>
+                  <View style={styles.addressHeader}>
+                    <ThemedText style={styles.addressLabel}>{savedAddress.label}</ThemedText>
+                    <View style={styles.deliveryMethodBadge}>
+                      <Ionicons 
+                        name={savedAddress.deliveryMethod === 'hand' ? 'hand-left' : 'location'} 
+                        size={16} 
+                        color={theme.colors.primary} 
+                      />
+                      <ThemedText style={styles.deliveryMethodText}>
+                        {savedAddress.deliveryMethod === 'hand' ? 'En main propre' : 'À déposer'}
+                      </ThemedText>
+                    </View>
+                  </View>
+                  <ThemedText style={styles.addressText}>{savedAddress.address}</ThemedText>
+                  {savedAddress.deliveryInstructions && (
+                    <ThemedText style={styles.instructionsText}>
+                      {savedAddress.deliveryInstructions}
+                    </ThemedText>
+                  )}
+                </View>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </ScrollView>
+      </ThemedView>
+    </View>
   );
 }
 

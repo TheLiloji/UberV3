@@ -107,8 +107,21 @@ export default function RootLayout() {
                 <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
                 <Stack.Screen name="restaurant" options={{ headerShown: false }} />
                 <Stack.Screen name="cart" options={{ headerShown: false }} />
-                <Stack.Screen name="address-selection" options={{ headerShown: false }} />
+                <Stack.Screen
+                  name="address-selection"
+                  options={{
+                    statusBarStyle: 'auto',
+                    statusBarColor: 'transparent',
+                  }}
+                />
                 <Stack.Screen name="+not-found" options={{ headerShown: false }} />
+                <Stack.Screen
+                  name="order"
+                  options={{
+                    statusBarStyle: 'light',
+                    statusBarColor: theme.colors.primary,
+                  }}
+                />
               </Stack>
               
               <CartButton />
