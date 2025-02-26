@@ -14,11 +14,16 @@ interface OrderItem {
   name: string;
   quantity: number;
   price: number;
+  image?: string;
+  restaurantId?: string;
+  restaurantName?: string;
+  restaurantImage?: string;
   options?: string[];
 }
 
 interface Order {
   id: string;
+  orderNumber?: string;
   multiRestaurant?: boolean;
   restaurants?: {
     id: string;
@@ -32,10 +37,20 @@ interface Order {
   restaurantName?: string;
   restaurantImage?: string;
   items?: OrderItem[];
-  totalPrice: number;
+  groupedItems?: {
+    [key: string]: {
+      name: string;
+      items: OrderItem[];
+      subtotal: number;
+      deliveryFee: number;
+      image: string;
+    }
+  };
+  totalPrice?: number;
+  total?: number;
   deliveryAddress?: {
     address: string;
-    coordinates: {
+    coordinates?: {
       latitude: number;
       longitude: number;
     };
@@ -45,10 +60,11 @@ interface Order {
     id?: string;
     label?: string;
   };
-  deliveryTime: string;
-  status: 'completed' | 'cancelled' | 'pending' | 'En préparation';
-  date: string;
-  deliveryFee: number;
+  address?: string;
+  deliveryTime?: string;
+  status?: 'completed' | 'cancelled' | 'pending' | 'En préparation';
+  date?: string;
+  deliveryFee?: number;
 }
 
 export default function OrdersScreen() {
@@ -138,7 +154,56 @@ export default function OrdersScreen() {
   );
 }
 
+// Fonction pour déterminer si une commande contient plusieurs restaurants
+const isMultiRestaurantOrder = (order: Order) => {
+  if (order.multiRestaurant) {
+    return true;
+  }
+  
+  if (order.groupedItems && Object.keys(order.groupedItems).length > 1) {
+    return true;
+  }
+  
+  if (order.restaurants && order.restaurants.length > 1) {
+    return true;
+  }
+  
+  return false;
+};
+
 const OrderCard = ({ order }: { order: Order }) => {
+  // Calculer le total réel basé sur les articles
+  const calculateTotal = () => {
+    if (order.total) {
+      return order.total;
+    }
+    
+    if (order.totalPrice) {
+      return order.totalPrice;
+    }
+    
+    if (order.groupedItems) {
+      return Object.values(order.groupedItems).reduce((total, restaurant) => {
+        return total + restaurant.subtotal + restaurant.deliveryFee;
+      }, 0);
+    }
+    
+    if (order.multiRestaurant && order.restaurants) {
+      return order.restaurants.reduce((total, restaurant) => {
+        return total + restaurant.subtotal + restaurant.deliveryFee;
+      }, 0);
+    } 
+    
+    if (order.items) {
+      const itemsTotal = order.items.reduce((total, item) => {
+        return total + (item.price * item.quantity);
+      }, 0);
+      return itemsTotal + (order.deliveryFee || 0);
+    }
+    
+    return 0;
+  };
+
   const renderOrderItem = (item: OrderItem) => (
     <View key={item.id} style={styles.orderItemContainer}>
       <View style={styles.orderItemHeader}>
@@ -157,95 +222,258 @@ const OrderCard = ({ order }: { order: Order }) => {
     </View>
   );
 
-  if (order.multiRestaurant && order.restaurants) {
+  // Formater la date correctement
+  const formatDate = (dateString?: string) => {
+    if (!dateString) return 'Date inconnue';
+    
+    try {
+      // Si la date est déjà formatée en français
+      if (dateString.includes('à') || dateString.includes('janvier') || 
+          dateString.includes('février') || dateString.includes('mars')) {
+        return dateString;
+      }
+      
+      // Essayer différents formats de date
+      let date;
+      if (dateString.includes('T')) {
+        // Format ISO
+        date = new Date(dateString);
+      } else if (dateString.includes('-')) {
+        // Format YYYY-MM-DD
+        date = new Date(dateString.replace(/-/g, '/'));
+      } else {
+        // Autre format
+        date = new Date(dateString);
+      }
+      
+      // Vérifier si la date est valide
+      if (isNaN(date.getTime())) {
+        return 'Date invalide';
+      }
+      
+      return date.toLocaleDateString('fr-FR', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      });
+    } catch (e) {
+      console.error('Erreur de formatage de date:', e);
+      return 'Date invalide';
+    }
+  };
+
+  // Fonction pour extraire l'adresse de livraison de manière sécurisée
+  const getDeliveryAddress = () => {
+    if (typeof order.deliveryAddress === 'string') {
+      return order.deliveryAddress;
+    }
+    
+    if (order.deliveryAddress && typeof order.deliveryAddress === 'object' && 'address' in order.deliveryAddress) {
+      return order.deliveryAddress.address;
+    }
+    
+    if (typeof order.address === 'string') {
+      return order.address;
+    }
+    
+    return 'Adresse inconnue';
+  };
+
+  // Gérer le cas où nous avons des groupedItems (nouveau format)
+  if (order.groupedItems) {
+    // Convertir l'objet groupedItems en tableau pour l'affichage
+    const restaurants = Object.keys(order.groupedItems).map(restaurantId => {
+      const restaurant = order.groupedItems![restaurantId];
+      return {
+        id: restaurantId,
+        name: restaurant.name,
+        image: restaurant.image,
+        items: restaurant.items,
+        subtotal: restaurant.subtotal,
+        deliveryFee: restaurant.deliveryFee
+      };
+    });
+    
+    const isMulti = restaurants.length > 1;
+    
+    // Afficher les données brutes pour le débogage
+    console.log("RESTAURANTS DATA:", JSON.stringify(restaurants, null, 2));
+    
     return (
       <View style={styles.orderCard}>
-        <ThemedText style={styles.multiRestaurantLabel}>
-          Commande multi-restaurants
+        <ThemedText style={styles.orderLabel}>
+          {isMulti ? 'Commande multi-restaurants' : 'Commande'}
+          {order.orderNumber ? ` #${order.orderNumber}` : ''}
+        </ThemedText>
+        
+        {restaurants.map((restaurant, index) => {
+          // Afficher les données brutes de chaque restaurant pour le débogage
+          console.log(`RESTAURANT ${index}:`, JSON.stringify(restaurant, null, 2));
+          
+          return (
+            <View key={restaurant.id || index}>
+              {index > 0 && <View style={styles.restaurantDivider} />}
+              
+              <View style={styles.restaurantInfo}>
+                <View style={styles.restaurantImageContainer}>
+                  <Image 
+                    source={{ uri: restaurant.image || 'https://via.placeholder.com/60?text=Restaurant' }} 
+                    style={styles.restaurantImage}
+                  />
+                </View>
+                <View style={styles.orderInfo}>
+                  <ThemedText style={styles.restaurantName}>
+                    {restaurant.name || 'Restaurant inconnu'}
+                  </ThemedText>
+                  <ThemedText style={styles.subtotalText}>
+                    Sous-total: {(restaurant.subtotal || 0).toFixed(2)}€
+                  </ThemedText>
+                  <ThemedText style={styles.deliveryFeeText}>
+                    Frais de livraison: {(restaurant.deliveryFee || 0).toFixed(2)}€
+                  </ThemedText>
+                </View>
+              </View>
+              
+              {/* Afficher directement les articles sans utiliser de fonction */}
+              <View style={styles.orderItems}>
+                {restaurant.items && restaurant.items.length > 0 ? (
+                  restaurant.items.map((item, itemIndex) => (
+                    <View key={`${restaurant.id}-item-${itemIndex}`} style={styles.orderItemContainer}>
+                      <View style={styles.orderItemHeader}>
+                        <ThemedText style={styles.orderItem}>
+                          {item.quantity}x {item.name}
+                        </ThemedText>
+                        <ThemedText style={styles.itemPrice}>
+                          {(item.price * item.quantity).toFixed(2)}€
+                        </ThemedText>
+                      </View>
+                    </View>
+                  ))
+                ) : (
+                  <ThemedText>Aucun article</ThemedText>
+                )}
+              </View>
+            </View>
+          );
+        })}
+        
+        <View style={styles.orderFooter}>
+          <ThemedText style={styles.orderDate}>
+            {formatDate(order.date)}
+          </ThemedText>
+          <ThemedText style={styles.deliveryInfo}>
+            {getDeliveryAddress()}
+          </ThemedText>
+        </View>
+        
+        <View style={styles.orderTotal}>
+          <ThemedText style={styles.totalPrice}>
+            Total: {calculateTotal().toFixed(2)}€
+          </ThemedText>
+        </View>
+      </View>
+    );
+  }
+  
+  // Gérer le cas où nous avons des restaurants (ancien format)
+  if (order.restaurants) {
+    const isMulti = order.restaurants.length > 1;
+    
+    return (
+      <View style={styles.orderCard}>
+        <ThemedText style={styles.orderLabel}>
+          {isMulti ? 'Commande multi-restaurants' : 'Commande'}
+          {order.orderNumber ? ` #${order.orderNumber}` : ''}
         </ThemedText>
         
         {order.restaurants.map((restaurant, index) => (
-          <View key={restaurant.id}>
+          <View key={restaurant.id || index}>
             {index > 0 && <View style={styles.restaurantDivider} />}
+            
             <View style={styles.restaurantInfo}>
               <View style={styles.restaurantImageContainer}>
                 <Image 
-                  source={{ uri: restaurant.image }} 
+                  source={{ uri: restaurant.image || 'https://via.placeholder.com/60?text=Restaurant' }} 
                   style={styles.restaurantImage}
                 />
               </View>
               <View style={styles.orderInfo}>
                 <ThemedText style={styles.restaurantName}>
-                  {restaurant.name}
+                  {restaurant.name || 'Restaurant inconnu'}
                 </ThemedText>
-                <View style={styles.orderItems}>
-                  {restaurant.items.map(renderOrderItem)}
-                </View>
                 <ThemedText style={styles.subtotalText}>
-                  Sous-total: {restaurant.subtotal.toFixed(2)}€
+                  Sous-total: {(restaurant.subtotal || 0).toFixed(2)}€
                 </ThemedText>
                 <ThemedText style={styles.deliveryFeeText}>
-                  Frais de livraison: {restaurant.deliveryFee.toFixed(2)}€
+                  Frais de livraison: {(restaurant.deliveryFee || 0).toFixed(2)}€
                 </ThemedText>
               </View>
             </View>
+            
+            <View style={styles.orderItems}>
+              {restaurant.items && restaurant.items.length > 0 ? 
+                restaurant.items.map(renderOrderItem) : 
+                <ThemedText>Aucun article</ThemedText>
+              }
+            </View>
           </View>
         ))}
-
+        
         <View style={styles.orderFooter}>
           <ThemedText style={styles.orderDate}>
-            {order.date ? new Date(order.date.replace(/-/g, '/')).toLocaleDateString('fr-FR', {
-              year: 'numeric',
-              month: 'long',
-              day: 'numeric'
-            }) : 'Date inconnue'}
+            {formatDate(order.date)}
           </ThemedText>
           <ThemedText style={styles.deliveryInfo}>
-            {order.deliveryAddress?.address || 'Adresse inconnue'}
+            {getDeliveryAddress()}
           </ThemedText>
-          <View style={styles.orderTotal}>
-            <ThemedText style={styles.totalPrice}>
-              Total: {order.totalPrice ? order.totalPrice.toFixed(2) : '0.00'}€
-            </ThemedText>
-          </View>
+        </View>
+        
+        <View style={styles.orderTotal}>
+          <ThemedText style={styles.totalPrice}>
+            Total: {calculateTotal().toFixed(2)}€
+          </ThemedText>
         </View>
       </View>
     );
   }
-
+  
+  // Gérer le cas d'une commande simple
   return (
     <View style={styles.orderCard}>
+      <ThemedText style={styles.orderLabel}>
+        Commande{order.orderNumber ? ` #${order.orderNumber}` : ''}
+      </ThemedText>
+      
       <View style={styles.restaurantInfo}>
         <View style={styles.restaurantImageContainer}>
           <Image 
-            source={{ uri: order.restaurantImage }} 
+            source={{ uri: order.restaurantImage || (order.items && order.items[0]?.restaurantImage) || 'https://via.placeholder.com/60?text=Restaurant' }} 
             style={styles.restaurantImage}
           />
         </View>
         <View style={styles.orderInfo}>
           <ThemedText style={styles.restaurantName}>
-            {order.restaurantName}
+            {order.restaurantName || (order.items && order.items[0]?.restaurantName) || 'Restaurant inconnu'}
           </ThemedText>
           <ThemedText style={styles.orderDate}>
-            {order.date ? new Date(order.date).toLocaleDateString('fr-FR', {
-              year: 'numeric',
-              month: 'long',
-              day: 'numeric'
-            }) : 'Date inconnue'}
+            {formatDate(order.date)}
           </ThemedText>
           <ThemedText style={styles.deliveryInfo}>
-            {order.address.address || 'Adresse inconnue'}
+            {getDeliveryAddress()}
           </ThemedText>
         </View>
       </View>
-
+      
       <View style={styles.orderItems}>
-        {order.items?.map(renderOrderItem)}
+        {order.items && order.items.length > 0 ? 
+          order.items.map(renderOrderItem) : 
+          <ThemedText>Aucun article</ThemedText>
+        }
       </View>
-
+      
       <View style={styles.orderTotal}>
         <ThemedText style={styles.totalPrice}>
-          Total: {order.total ? order.total.toFixed(2) : '0.00'}€
+          Total: {calculateTotal().toFixed(2)}€
         </ThemedText>
       </View>
     </View>
@@ -373,7 +601,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
   },
-  multiRestaurantLabel: {
+  orderLabel: {
     color: theme.colors.primary,
     fontSize: 14,
     fontWeight: '600',
