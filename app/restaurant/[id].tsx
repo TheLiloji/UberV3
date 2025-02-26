@@ -19,38 +19,6 @@ interface MenuItem {
   options?: { name: string; choices: { id: string; name: string; price: number }[] }[];
 }
 
-const MENU_ITEMS: MenuItem[] = [
-  {
-    id: '1',
-    name: 'Entrées',
-    category: 'starters',
-    description: 'Nos entrées signature',
-    price: 0,
-  },
-  {
-    id: '2',
-    name: 'Salade César',
-    category: 'starters',
-    description: 'Laitue romaine, croûtons, parmesan, sauce césar maison',
-    price: 9.90,
-    image: 'https://picsum.photos/200/200?random=7',
-  },
-  {
-    id: '3',
-    name: 'Plat Principal',
-    category: 'main',
-    description: 'Nos spécialités',
-    price: 0,
-  },
-  {
-    id: '4',
-    name: 'Steak Frites',
-    category: 'main',
-    description: 'Steak de bœuf, frites maison, sauce au poivre',
-    price: 18.90,
-    image: 'https://picsum.photos/200/200?random=8',
-  },
-];
 
 export default function RestaurantScreen() {
   const { id: restaurantId } = useLocalSearchParams();
