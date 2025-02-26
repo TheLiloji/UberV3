@@ -7,6 +7,7 @@ import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { theme } from '@/constants/theme';
 import { useSettings } from '@/contexts/SettingsContext';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface SettingOption {
   id: string;
@@ -52,6 +53,7 @@ const SETTINGS_OPTIONS = [
 
 export default function SettingsScreen() {
   const router = useRouter();
+  const { t } = useTranslation();
   const { 
     notificationsEnabled, 
     locationEnabled, 
@@ -61,47 +63,59 @@ export default function SettingsScreen() {
     setLanguage 
   } = useSettings();
   
-  const [settings, setSettings] = useState<SettingOption[]>([]);
+  const [settings, setSettings] = useState<SettingOption[]>([
+    {
+      id: 'notifications',
+      label: 'Notifications',
+      icon: 'notifications-outline',
+      value: notificationsEnabled,
+      type: 'toggle'
+    },
+    {
+      id: 'language',
+      label: 'Langue',
+      icon: 'language-outline',
+      value: language,
+      type: 'select'
+    },
+    {
+      id: 'location',
+      label: 'Localisation',
+      icon: 'location-outline',
+      value: locationEnabled,
+      type: 'toggle'
+    },
+    {
+      id: 'privacy',
+      label: 'Confidentialité',
+      icon: 'shield-checkmark-outline',
+      type: 'screen',
+      screen: '/privacy'
+    },
+    {
+      id: 'about',
+      label: 'À propos',
+      icon: 'information-circle-outline',
+      type: 'screen',
+      screen: '/about'
+    }
+  ]);
 
-  // Initialiser les paramètres avec les valeurs du contexte
   useEffect(() => {
-    setSettings([
-      {
-        id: 'notifications',
-        label: 'Notifications',
-        icon: 'notifications-outline',
-        value: notificationsEnabled,
-        type: 'toggle'
-      },
-      {
-        id: 'language',
-        label: 'Langue',
-        icon: 'language-outline',
-        value: language,
-        type: 'select'
-      },
-      {
-        id: 'location',
-        label: 'Localisation',
-        icon: 'location-outline',
-        value: locationEnabled,
-        type: 'toggle'
-      },
-      {
-        id: 'privacy',
-        label: 'Confidentialité',
-        icon: 'shield-checkmark-outline',
-        screen: 'privacy',
-        type: 'screen'
-      },
-      {
-        id: 'about',
-        label: 'À propos',
-        icon: 'information-circle-outline',
-        screen: 'about',
-        type: 'screen'
-      },
-    ]);
+    setSettings(prevSettings => 
+      prevSettings.map(setting => {
+        if (setting.id === 'notifications') {
+          return { ...setting, value: notificationsEnabled };
+        }
+        if (setting.id === 'language') {
+          return { ...setting, value: language };
+        }
+        if (setting.id === 'location') {
+          return { ...setting, value: locationEnabled };
+        }
+        return setting;
+      })
+    );
   }, [notificationsEnabled, locationEnabled, language]);
 
   const handleSettingPress = async (setting: SettingOption) => {
@@ -116,12 +130,12 @@ export default function SettingsScreen() {
       case 'select':
         if (setting.id === 'language') {
           Alert.alert(
-            'Sélectionner la langue',
+            t('settings.selectLanguage'),
             '',
             [
               { text: 'Français', onPress: () => setLanguage('Français') },
               { text: 'English', onPress: () => setLanguage('English') },
-              { text: 'Annuler', style: 'cancel' }
+              { text: t('common.cancel'), style: 'cancel' }
             ]
           );
         }
@@ -145,7 +159,7 @@ export default function SettingsScreen() {
           >
             <Ionicons name="arrow-back" size={24} color={theme.colors.text} />
           </TouchableOpacity>
-          <ThemedText type="title" style={styles.headerTitle}>Paramètres</ThemedText>
+          <ThemedText type="title" style={styles.headerTitle}>{t('settings.title')}</ThemedText>
         </ThemedView>
 
         {/* Settings List */}
@@ -160,10 +174,12 @@ export default function SettingsScreen() {
                 <Ionicons name={setting.icon} size={24} color={theme.colors.primary} />
               </View>
               <View style={styles.settingContent}>
-                <ThemedText style={styles.settingTitle}>{setting.label}</ThemedText>
+                <ThemedText style={styles.settingTitle}>
+                  {t(`settings.${setting.id}`)}
+                </ThemedText>
                 <ThemedText style={styles.settingValue}>
                   {typeof setting.value === 'boolean' 
-                    ? (setting.value ? 'Activées' : 'Désactivées')
+                    ? (setting.value ? t('settings.enabled') : t('settings.disabled'))
                     : setting.value}
                 </ThemedText>
               </View>
