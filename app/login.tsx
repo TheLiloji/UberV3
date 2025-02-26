@@ -21,6 +21,7 @@ export default function LoginScreen() {
   const handleLogin = async () => {
     try {
       const response = await axiosInstance.post('/api/auth/login', { email, password });
+      
       if (response.data.token) {
         await AsyncStorage.setItem('token', response.data.token);
         console.log("Login successful");

@@ -55,7 +55,6 @@ const fetchRestaurants = async () => {
       },
     });
     POPULAR_RESTAURANTS = response.data;
-    console.log('Restaurants fetched:', POPULAR_RESTAURANTS);
   } catch (error) {
     console.error('Error fetching restaurants:', error);
   }

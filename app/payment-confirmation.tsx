@@ -1,7 +1,9 @@
-import { StyleSheet, TouchableOpacity, View, SafeAreaView, Platform, StatusBar, ActivityIndicator } from 'react-native';
+import { StyleSheet, TouchableOpacity, View, SafeAreaView, Platform, StatusBar, ActivityIndicator, Alert } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useEffect, useState } from 'react';
+import axiosInstance from '@/api/axiosInstance'; // Import the Axios instance
+import AsyncStorage from '@react-native-async-storage/async-storage'; // Import AsyncStorage
 
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
@@ -13,13 +15,39 @@ export default function PaymentConfirmationScreen() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    const handleAddPaymentMethod = async () => {
+      try {
+        const token = await AsyncStorage.getItem('token');
+        const response = await axiosInstance.post('/api/payment-methods', {
+          type: params.method,
+          label: getMethodLabel(),
+          icon: getMethodIcon(),
+          isDefault: false,
+        }, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (response.status === 201) {
+          Alert.alert('Succès', 'Méthode de paiement ajoutée avec succès');
+        } else {
+          Alert.alert('Erreur', 'Échec de l\'ajout de la méthode de paiement');
+        }
+      } catch (err) {
+        Alert.alert('Erreur', `Erreur lors de l'ajout de la méthode de paiement: ${err.message}`);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
     // Simuler un chargement
     const timer = setTimeout(() => {
-      setIsLoading(false);
+      handleAddPaymentMethod();
     }, 2000);
 
     return () => clearTimeout(timer);
-  }, []);
+  }, [params.method]);
 
   const getMethodIcon = () => {
     switch (params.method) {
@@ -171,4 +199,4 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
   },
-}); 
+});

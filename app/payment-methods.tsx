@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
-import { StyleSheet, TouchableOpacity, View, ScrollView, SafeAreaView, Platform, StatusBar, Alert, Modal, Pressable } from 'react-native';
+import { StyleSheet, TouchableOpacity, View, ScrollView, SafeAreaView, Platform, StatusBar, Alert, Modal, Pressable, TextInput } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import axiosInstance from '@/api/axiosInstance'; // Import the Axios instance
+import AsyncStorage from '@react-native-async-storage/async-storage'; // Import AsyncStorage
 
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
@@ -36,23 +38,6 @@ const PAYMENT_METHODS = [
   } : null,
 ].filter(Boolean);
 
-const SAVED_METHODS = [
-  {
-    id: '1',
-    type: 'card',
-    label: 'Visa se terminant par 4242',
-    icon: 'card-outline',
-    isDefault: false,
-  },
-  {
-    id: '2',
-    type: 'paypal',
-    label: 'PayPal - john.doe@gmail.com',
-    icon: 'logo-paypal',
-    isDefault: true,
-  }
-];
-
 const OptionsModal = ({ 
   visible, 
   onClose, 
@@ -62,7 +47,7 @@ const OptionsModal = ({
 }: { 
   visible: boolean;
   onClose: () => void;
-  method: (typeof SAVED_METHODS)[0] | null;
+  method: any;
   onToggleDefault: () => void;
   onDelete: () => void;
 }) => {
@@ -133,18 +118,32 @@ const OptionsModal = ({
 
 export default function PaymentMethodsScreen() {
   const router = useRouter();
-  const params = useLocalSearchParams();
-  const [savedMethods, setSavedMethods] = useState(SAVED_METHODS);
-  const [selectedMethodId, setSelectedMethodId] = useState<string | null>(null);
+  const [savedMethods, setSavedMethods] = useState([]);
+  const [selectedMethod, setSelectedMethod] = useState<any>(null);
   const [modalVisible, setModalVisible] = useState(false);
-  const [selectedMethod, setSelectedMethod] = useState<(typeof SAVED_METHODS)[0] | null>(null);
+  const [type, setType] = useState('');
+  const [label, setLabel] = useState('');
+  const [icon, setIcon] = useState('');
+  const [isDefault, setIsDefault] = useState(false);
+  const [error, setError] = useState('');
 
   useEffect(() => {
-    if (params.newMethod) {
-      const newMethod = JSON.parse(params.newMethod as string);
-      setSavedMethods(prev => [...prev, newMethod]);
-    }
-  }, [params.newMethod]);
+    const fetchPaymentMethods = async () => {
+      try {
+        const token = await AsyncStorage.getItem('token');
+        const response = await axiosInstance.get('/api/payment-methods', {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        setSavedMethods(response.data);
+      } catch (error) {
+        console.error('Error fetching payment methods:', error);
+      }
+    };
+
+    fetchPaymentMethods();
+  }, []);
 
   const handleAddMethod = (method: PaymentMethod) => {
     if (method === 'card') {
@@ -157,48 +156,83 @@ export default function PaymentMethodsScreen() {
     }
   };
 
-  const handleOptionsPress = (method: (typeof SAVED_METHODS)[0]) => {
+  const handleOptionsPress = (method: any) => {
     setSelectedMethod(method);
     setModalVisible(true);
   };
 
-  const handleToggleDefault = (methodId: string) => {
-    setSavedMethods(methods => 
-      methods.map(method => ({
+  const handleToggleDefault = async (methodId: string) => {
+    try {
+      const token = await AsyncStorage.getItem('token');
+      const response = await axiosInstance.put(`/api/payment-methods/${methodId}/default`, {}, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      setSavedMethods(methods => methods.map(method => ({
         ...method,
-        isDefault: method.id === methodId ? !method.isDefault : false
-      }))
-    );
+        isDefault: method.id === methodId ? true : false,
+      })));
+    } catch (error) {
+      console.error('Error toggling default payment method:', error);
+      Alert.alert('Erreur', 'Erreur lors de la modification du moyen de paiement par défaut.');
+    }
   };
 
-  const handleDelete = (methodId: string) => {
-    Alert.alert(
-      'Confirmation',
-      'Voulez-vous vraiment supprimer ce moyen de paiement ?',
-      [
-        {
-          text: 'Annuler',
-          style: 'cancel',
+  const handleDelete = async (methodId: string) => {
+    try {
+      const token = await AsyncStorage.getItem('token');
+      await axiosInstance.delete(`/api/payment-methods/${methodId}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
         },
-        {
-          text: 'Supprimer',
-          style: 'destructive',
-          onPress: () => {
-            setSavedMethods(methods => 
-              methods.filter(method => method.id !== methodId)
-            );
-          },
-        },
-      ]
-    );
+      });
+      setSavedMethods(methods => methods.filter(method => method.id !== methodId));
+    } catch (error) {
+      console.error('Error deleting payment method:', error);
+    }
   };
 
-  const handlePaymentMethodSelect = (method: PaymentMethod) => {
-    // Stocker le moyen de paiement sélectionné
-    // ...
-    
-    // Revenir à l'écran précédent (l'écran de commande)
-    router.back();
+  const handleAddPaymentMethod = async () => {
+    if (!type || !label || !icon) {
+      setError('Veuillez remplir tous les champs');
+      return;
+    }
+
+    try {
+      const token = await AsyncStorage.getItem('token');
+      const response = await axiosInstance.post('/api/payment-methods', {
+        type,
+        label,
+        icon,
+        isDefault,
+      }, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (response.status === 201) {
+        Alert.alert('Succès', 'Méthode de paiement ajoutée avec succès');
+        setSavedMethods(prev => {
+          if (isDefault) {
+            return prev.map(method => ({
+              ...method,
+              isDefault: false,
+            })).concat(response.data);
+          }
+          return [...prev, response.data];
+        });
+        setType('');
+        setLabel('');
+        setIcon('');
+        setIsDefault(false);
+      } else {
+        setError('Échec de l\'ajout de la méthode de paiement');
+      }
+    } catch (err) {
+      setError(`Erreur lors de l'ajout de la méthode de paiement: ${err.message}`);
+    }
   };
 
   return (
@@ -417,4 +451,46 @@ const styles = StyleSheet.create({
   deleteText: {
     color: theme.colors.error,
   },
-}); 
+  form: {
+    gap: theme.spacing.md,
+  },
+  inputContainer: {
+    gap: theme.spacing.xs,
+  },
+  label: {
+    fontSize: 16,
+    fontWeight: '500',
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    borderRadius: theme.borderRadius.md,
+    padding: theme.spacing.md,
+    fontSize: 16,
+    backgroundColor: theme.colors.backgroundSecondary,
+  },
+  checkboxContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: theme.spacing.sm,
+  },
+  checkboxLabel: {
+    fontSize: 16,
+  },
+  errorText: {
+    color: 'red',
+    marginTop: theme.spacing.xs,
+  },
+  addButton: {
+    backgroundColor: theme.colors.primary,
+    padding: theme.spacing.md,
+    borderRadius: theme.borderRadius.md,
+    alignItems: 'center',
+    marginTop: theme.spacing.md,
+  },
+  addButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+});

@@ -19,31 +19,6 @@ const DELIVERY_FEES = {
   // Ajouter d'autres restaurants au besoin
 };
 
-// Importer les méthodes de paiement enregistrées
-const SAVED_METHODS = [
-  {
-    id: '1',
-    type: 'card',
-    label: 'Visa se terminant par 4242',
-    icon: 'card-outline',
-    isDefault: false,
-  },
-  {
-    id: '2',
-    type: 'paypal',
-    label: 'PayPal - john.doe@gmail.com',
-    icon: 'logo-paypal',
-    isDefault: true,
-  },
-  {
-    id: '3',
-    type: 'google-pay',
-    label: 'Google Pay - john.doe@gmail.com',
-    icon: 'logo-google',
-    isDefault: false,
-  }
-];
-
 // Ajoutez cette interface pour typer les données d'adresse
 interface Address {
   id: string;
@@ -67,7 +42,7 @@ export default function OrderScreen() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [paymentMethod, setPaymentMethod] = useState<string | null>(null);
-  const [savedMethods, setSavedMethods] = useState(SAVED_METHODS);
+  const [savedMethods, setSavedMethods] = useState([]);
   const [lastAddress, setLastAddress] = useState<Address | null>(null);
   const [loadingAddress, setLoadingAddress] = useState(true);
   
@@ -101,6 +76,9 @@ export default function OrderScreen() {
     
     // Récupérer l'adresse
     fetchLastAddress();
+    
+    // Récupérer les méthodes de paiement
+    fetchPaymentMethods();
     
     // Vérifier si une nouvelle adresse a été sélectionnée
     const checkSelectedAddress = async () => {
@@ -155,6 +133,21 @@ export default function OrderScreen() {
     }
   };
 
+  // Fonction pour récupérer les méthodes de paiement
+  const fetchPaymentMethods = async () => {
+    try {
+      const token = await AsyncStorage.getItem('token');
+      const response = await axiosInstance.get('/api/payment-methods', {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      setSavedMethods(response.data);
+    } catch (error) {
+      console.error('Error fetching payment methods:', error);
+    }
+  };
+
   const handleOrderSubmit = async () => {
     setLoading(true);
     const token = await AsyncStorage.getItem('token');
@@ -199,23 +192,11 @@ export default function OrderScreen() {
   };
 
   const handleSelectPaymentMethod = (method: string) => {
-    const selectedMethod = savedMethods.find(m => m.type === method);
-    const currentDefault = savedMethods.find(m => m.isDefault);
-
-    if (selectedMethod && currentDefault) {
-      // Inverser le statut de "par défaut"
-      const updatedMethods = savedMethods.map(m => {
-        if (m.id === selectedMethod.id) {
-          return { ...m, isDefault: true };
-        }
-        if (m.id === currentDefault.id) {
-          return { ...m, isDefault: false };
-        }
-        return m;
-      });
-      setSavedMethods(updatedMethods);
+    if (paymentMethod === method) {
+      setPaymentMethod(null); // Deselect if the same method is selected again
+    } else {
+      setPaymentMethod(method);
     }
-    setPaymentMethod(method);
   };
 
   const handleAddressChange = () => {
@@ -350,9 +331,9 @@ export default function OrderScreen() {
                 style={[
                   styles.paymentMethodItem,
                   method.isDefault && styles.paymentMethodItemDefault,
-                  paymentMethod === method.type && styles.paymentMethodItemSelected,
+                  paymentMethod === method.id && styles.paymentMethodItemSelected,
                 ]}
-                onPress={() => handleSelectPaymentMethod(method.type)}
+                onPress={() => handleSelectPaymentMethod(method.id)}
               >
                 <Ionicons name={method.icon as any} size={24} color={theme.colors.primary} />
                 <View style={styles.paymentMethodDetails}>
@@ -361,7 +342,7 @@ export default function OrderScreen() {
                     <ThemedText style={styles.defaultLabel}>Par défaut</ThemedText>
                   )}
                 </View>
-                {paymentMethod === method.type && (
+                {paymentMethod === method.id && (
                   <Ionicons name="checkmark-circle" size={24} color={theme.colors.primary} />
                 )}
               </TouchableOpacity>
@@ -730,4 +711,4 @@ const styles = StyleSheet.create({
     color: theme.colors.primary,
     fontSize: 16,
   },
-}); 
+});
