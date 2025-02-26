@@ -1,7 +1,7 @@
 import { Image, StyleSheet, ScrollView, TextInput, View, TouchableOpacity, ImageBackground } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter, useLocalSearchParams } from 'expo-router';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Platform, StatusBar } from 'react-native';
 import { AnimatedCategoryTitle } from '@/components/AnimatedCategoryTitle';
 
@@ -12,6 +12,7 @@ import { theme } from '@/constants/theme';
 import { USER_DATA } from '@/constants/user';
 import axiosInstance from '@/api/axiosInstance'; // Import the Axios instance
 import AsyncStorage from '@react-native-async-storage/async-storage'; // Import AsyncStorage
+import { OrderSuccessAnimation } from '@/components/OrderSuccessAnimation';
 
 const CATEGORIES = [
   {
@@ -51,7 +52,7 @@ const CATEGORIES = [
     image: 'https://i.imgur.com/G88jzLo.png',
     type: 'category',
     tag: 'french',
-    bannerImage: 'https://i.imgur.com/c961zWQ.jpeg',
+    bannerImage: 'https://i.imgur.com/vQ9DlZA.png',
   },
   {
     id: '5',
@@ -59,7 +60,7 @@ const CATEGORIES = [
     image: 'https://i.imgur.com/9xhdKSE.png',
     type: 'category',
     tag: 'tradition',
-    bannerImage: 'https://i.imgur.com/qTCnRcS.png',
+    bannerImage: 'https://i.imgur.com/PMIGqnU.png',
   },
   {
     id: '6',
@@ -203,9 +204,10 @@ const fetchUserProfile = async () => {
   }
 };
 
-export default function HomeScreen() {
+const HomeScreen = () => {
   const router = useRouter();
-  const { selectedAddress } = useLocalSearchParams();
+  const params = useLocalSearchParams();
+  const { selectedAddress } = params;
   const [address, setAddress] = useState(selectedAddress || 'Sélectionnez votre position actuelle');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -216,6 +218,9 @@ export default function HomeScreen() {
   }>({ restaurants: [], menuItems: [] });
   const [restaurants, setRestaurants] = useState<typeof POPULAR_RESTAURANTS>([]);
   const [userProfile, setUserProfile] = useState(null);
+  const [showOrderSuccess, setShowOrderSuccess] = useState(false);
+  const [orderNumber, setOrderNumber] = useState('');
+  const [animationTriggered, setAnimationTriggered] = useState(false);
 
   useEffect(() => {
     if (selectedAddress) {
@@ -240,6 +245,15 @@ export default function HomeScreen() {
     };
     loadUserProfile();
   }, []);
+
+  useEffect(() => {
+    if (params.orderSuccess === 'true' && !animationTriggered) {
+      setAnimationTriggered(true);
+      setOrderNumber(params.orderNumber as string || '');
+      setShowOrderSuccess(true);
+      router.setParams({});
+    }
+  }, [params, router, animationTriggered]);
 
   const handleLocationPress = () => {
     router.push('/address-selection');
@@ -311,6 +325,10 @@ export default function HomeScreen() {
     .sort((a, b) => b.rating - a.rating)
     .slice(0, selectedCategory === null ? 8 : undefined);
 
+  const handleCloseOrderSuccess = () => {
+    setShowOrderSuccess(false);
+  };
+
   return (
     <ThemedView style={styles.container}>
       {/* Barre de localisation fixe */}
@@ -367,7 +385,7 @@ export default function HomeScreen() {
             </ImageBackground>
           ) : (
             <ImageBackground
-              source={{ uri: 'https://i.imgur.com/9H5MylK.png' }}
+              source={{ uri: 'https://i.imgur.com/KDcbr21.png' }}
               style={styles.categoryHeaderImage}
               resizeMode="cover"
             >
@@ -580,9 +598,14 @@ export default function HomeScreen() {
           </View>
         )}
       </ScrollView>
+      <OrderSuccessAnimation 
+        visible={showOrderSuccess}
+        orderNumber={orderNumber}
+        onClose={handleCloseOrderSuccess}
+      />
     </ThemedView>
   );
-}
+};
 
 const styles = StyleSheet.create({
   container: {
@@ -998,3 +1021,5 @@ const styles = StyleSheet.create({
     resizeMode: 'contain',
   },
 });
+
+export default HomeScreen;

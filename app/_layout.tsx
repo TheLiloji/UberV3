@@ -13,6 +13,7 @@ import { ThemedText } from '@/components/ThemedText';
 import { CartProvider, useCart } from '@/contexts/CartContext';
 import { UIProvider, useUI } from '@/contexts/UIContext';
 import { CustomSplash } from '@/components/CustomSplash';
+import { SettingsProvider } from '@/contexts/SettingsContext';
 
 // Créer un composant séparé pour le bouton panier
 function CartButton() {
@@ -83,54 +84,56 @@ export default function RootLayout() {
   }
 
   return (
-    <UIProvider>
-      <CartProvider>
-        <ThemeProvider value={DefaultTheme}>
-          {showSplash ? (
-            <CustomSplash 
-              onAnimationComplete={() => setShowSplash(false)} 
-            />
-          ) : (
-            <>
-              <Stack screenOptions={{ headerShown: false }}>
-                <Stack.Screen 
-                  name="login" 
-                  options={{ 
-                    headerShown: false,
-                    gestureEnabled: false 
-                  }} 
-                />
-                <Stack.Screen 
-                  name="register" 
-                  options={{ headerShown: false }} 
-                />
-                <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-                <Stack.Screen name="restaurant" options={{ headerShown: false }} />
-                <Stack.Screen name="cart" options={{ headerShown: false }} />
-                <Stack.Screen
-                  name="address-selection"
-                  options={{
-                    statusBarStyle: 'auto',
-                    statusBarColor: 'transparent',
-                  }}
-                />
-                <Stack.Screen name="+not-found" options={{ headerShown: false }} />
-                <Stack.Screen
-                  name="order"
-                  options={{
-                    statusBarStyle: 'light',
-                    statusBarColor: theme.colors.primary,
-                  }}
-                />
-              </Stack>
-              
-              <CartButton />
-              <StatusBar style="dark" />
-            </>
-          )}
-        </ThemeProvider>
-      </CartProvider>
-    </UIProvider>
+    <SettingsProvider>
+      <UIProvider>
+        <CartProvider>
+          <ThemeProvider value={DefaultTheme}>
+            {showSplash ? (
+              <CustomSplash 
+                onAnimationComplete={() => setShowSplash(false)} 
+              />
+            ) : (
+              <>
+                <Stack screenOptions={{ headerShown: false }}>
+                  <Stack.Screen 
+                    name="login" 
+                    options={{ 
+                      headerShown: false,
+                      gestureEnabled: false 
+                    }} 
+                  />
+                  <Stack.Screen 
+                    name="register" 
+                    options={{ headerShown: false }} 
+                  />
+                  <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+                  <Stack.Screen name="restaurant" options={{ headerShown: false }} />
+                  <Stack.Screen name="cart" options={{ headerShown: false }} />
+                  <Stack.Screen
+                    name="address-selection"
+                    options={{
+                      statusBarStyle: 'auto',
+                      statusBarColor: 'transparent',
+                    }}
+                  />
+                  <Stack.Screen name="+not-found" options={{ headerShown: false }} />
+                  <Stack.Screen
+                    name="order"
+                    options={{
+                      statusBarStyle: 'light',
+                      statusBarColor: theme.colors.primary,
+                    }}
+                  />
+                </Stack>
+                
+                <CartButton />
+                <StatusBar style="dark" />
+              </>
+            )}
+          </ThemeProvider>
+        </CartProvider>
+      </UIProvider>
+    </SettingsProvider>
   );
 }
 
