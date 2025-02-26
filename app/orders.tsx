@@ -1,7 +1,9 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { StyleSheet, TouchableOpacity, View, ScrollView, SafeAreaView, Image, Platform, StatusBar } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import axiosInstance from '@/api/axiosInstance'; // Import the Axios instance
+import AsyncStorage from '@react-native-async-storage/async-storage'; // Import AsyncStorage
 
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
@@ -24,128 +26,56 @@ interface Order {
     image: string;
     items: OrderItem[];
     subtotal: number;
+    deliveryFee: number;
   }[];
   restaurantId?: string;
   restaurantName?: string;
   restaurantImage?: string;
   items?: OrderItem[];
   totalPrice: number;
-  deliveryAddress: string;
+  deliveryAddress?: {
+    address: string;
+    coordinates: {
+      latitude: number;
+      longitude: number;
+    };
+    deliveryInstructions?: string;
+    deliveryMethod?: string;
+    icon?: string;
+    id?: string;
+    label?: string;
+  };
   deliveryTime: string;
-  status: 'completed' | 'cancelled' | 'pending';
+  status: 'completed' | 'cancelled' | 'pending' | 'En préparation';
   date: string;
   deliveryFee: number;
 }
 
-const ORDERS: Order[] = [
-  {
-    id: '3',
-    multiRestaurant: true,
-    restaurants: [
-      {
-        id: 'etoile1',
-        name: "L'ÉTOILE Ballainvilliers",
-        image: 'https://picsum.photos/200/200?random=1',
-        items: [
-          {
-            id: '5',
-            name: 'Menu Kebab',
-            quantity: 1,
-            price: 15.90,
-            options: ['Sauce Algérienne', 'Sans oignons']
-          },
-          {
-            id: '5-2',
-            name: 'Menu Kebab',
-            quantity: 1,
-            price: 15.90,
-            options: ['Sauce Samouraï', 'Extra fromage']
-          }
-        ],
-        subtotal: 31.80
-      },
-      {
-        id: 'tacos1',
-        name: 'Tacos Rolls',
-        image: 'https://picsum.photos/200/200?random=2',
-        items: [
-          {
-            id: '6',
-            name: 'Tacos XXL',
-            quantity: 1,
-            price: 13.90
-          }
-        ],
-        subtotal: 13.90
-      }
-    ],
-    totalPrice: 45.70,
-    deliveryAddress: '15 Avenue des Sciences, Aubière',
-    deliveryTime: '35 min',
-    status: 'completed',
-    date: '2024-03-10',
-    deliveryFee: 0
-  },
-  {
-    id: '1',
-    restaurantId: 'etoile1',
-    restaurantName: "L'ÉTOILE Ballainvilliers",
-    restaurantImage: 'https://picsum.photos/200/200?random=1',
-    items: [
-      {
-        id: '1',
-        name: 'Crousti-bowl',
-        quantity: 1,
-        price: 14.90
-      },
-      {
-        id: '2',
-        name: 'Sandwich kebab',
-        quantity: 1,
-        price: 12.90
-      }
-    ],
-    totalPrice: 27.80,
-    deliveryAddress: '17 rue de Romagnat, Aubière',
-    deliveryTime: '25 min',
-    status: 'completed',
-    date: '2024-03-15',
-    deliveryFee: 0
-  },
-  {
-    id: '2',
-    restaurantId: 'tacos1',
-    restaurantName: 'Tacos Rolls',
-    restaurantImage: 'https://picsum.photos/200/200?random=2',
-    items: [
-      {
-        id: '3',
-        name: 'Cheese Rolls gratiné',
-        quantity: 1,
-        price: 12.90
-      },
-      {
-        id: '4',
-        name: 'Maxi frites',
-        quantity: 1,
-        price: 4.00
-      }
-    ],
-    totalPrice: 16.90,
-    deliveryAddress: '22 All. Alan Turing, Clermont-Ferrand',
-    deliveryTime: '20 min',
-    status: 'completed',
-    date: '2024-03-14',
-    deliveryFee: 0
-  }
-];
-
 export default function OrdersScreen() {
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<'current' | 'past'>('past');
+  const [activeTab, setActiveTab] = useState<'current' | 'past'>('current');
+  const [orders, setOrders] = useState<Order[]>([]);
 
-  const filteredOrders = ORDERS.filter(order => {
-    return activeTab === 'current' ? order.status === 'pending' : order.status === 'completed';
+  useEffect(() => {
+    const fetchOrders = async () => {
+      try {
+        const token = await AsyncStorage.getItem('token');
+        const response = await axiosInstance.get('/api/orders', {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        setOrders(response.data);
+      } catch (error) {
+        console.error('Error fetching orders:', error);
+      }
+    };
+
+    fetchOrders();
+  }, []);
+
+  const filteredOrders = orders.filter(order => {
+    return activeTab === 'current' ? order.status === 'pending' || order.status === 'En préparation' : order.status === 'completed';
   });
 
   const renderOrderItem = (item: OrderItem) => (
@@ -155,7 +85,7 @@ export default function OrdersScreen() {
           {item.quantity}x {item.name}
         </ThemedText>
         <ThemedText style={styles.itemPrice}>
-          {(item.price * item.quantity).toFixed(2)}€
+          {item.price ? (item.price * item.quantity).toFixed(2) : '0.00'}€
         </ThemedText>
       </View>
       {item.options && item.options.length > 0 && (
@@ -200,12 +130,7 @@ export default function OrdersScreen() {
 
         <ScrollView style={styles.content}>
           {filteredOrders.map(order => (
-            <View key={order.id} style={styles.orderCard}>
-              {order.items?.map(renderOrderItem)}
-              <ThemedText style={styles.totalPrice}>
-                Total: {order.totalPrice.toFixed(2)}€
-              </ThemedText>
-            </View>
+            <OrderCard key={order.id} order={order} />
           ))}
         </ScrollView>
       </ThemedView>
@@ -214,6 +139,24 @@ export default function OrdersScreen() {
 }
 
 const OrderCard = ({ order }: { order: Order }) => {
+  const renderOrderItem = (item: OrderItem) => (
+    <View key={item.id} style={styles.orderItemContainer}>
+      <View style={styles.orderItemHeader}>
+        <ThemedText style={styles.orderItem}>
+          {item.quantity}x {item.name}
+        </ThemedText>
+        <ThemedText style={styles.itemPrice}>
+          {item.price ? (item.price * item.quantity).toFixed(2) : '0.00'}€
+        </ThemedText>
+      </View>
+      {item.options && item.options.length > 0 && (
+        <ThemedText style={styles.orderItemOptions}>
+          {item.options.join(', ')}
+        </ThemedText>
+      )}
+    </View>
+  );
+
   if (order.multiRestaurant && order.restaurants) {
     return (
       <View style={styles.orderCard}>
@@ -241,6 +184,9 @@ const OrderCard = ({ order }: { order: Order }) => {
                 <ThemedText style={styles.subtotalText}>
                   Sous-total: {restaurant.subtotal.toFixed(2)}€
                 </ThemedText>
+                <ThemedText style={styles.deliveryFeeText}>
+                  Frais de livraison: {restaurant.deliveryFee.toFixed(2)}€
+                </ThemedText>
               </View>
             </View>
           </View>
@@ -248,18 +194,18 @@ const OrderCard = ({ order }: { order: Order }) => {
 
         <View style={styles.orderFooter}>
           <ThemedText style={styles.orderDate}>
-            {new Date(order.date).toLocaleDateString('fr-FR', {
+            {order.date ? new Date(order.date.replace(/-/g, '/')).toLocaleDateString('fr-FR', {
               year: 'numeric',
               month: 'long',
               day: 'numeric'
-            })}
+            }) : 'Date inconnue'}
           </ThemedText>
           <ThemedText style={styles.deliveryInfo}>
-            {order.deliveryAddress}
+            {order.deliveryAddress?.address || 'Adresse inconnue'}
           </ThemedText>
           <View style={styles.orderTotal}>
             <ThemedText style={styles.totalPrice}>
-              Total: {order.totalPrice.toFixed(2)}€
+              Total: {order.totalPrice ? order.totalPrice.toFixed(2) : '0.00'}€
             </ThemedText>
           </View>
         </View>
@@ -281,14 +227,14 @@ const OrderCard = ({ order }: { order: Order }) => {
             {order.restaurantName}
           </ThemedText>
           <ThemedText style={styles.orderDate}>
-            {new Date(order.date).toLocaleDateString('fr-FR', {
+            {order.date ? new Date(order.date).toLocaleDateString('fr-FR', {
               year: 'numeric',
               month: 'long',
               day: 'numeric'
-            })}
+            }) : 'Date inconnue'}
           </ThemedText>
           <ThemedText style={styles.deliveryInfo}>
-            {order.deliveryAddress}
+            {order.address.address || 'Adresse inconnue'}
           </ThemedText>
         </View>
       </View>
@@ -299,7 +245,7 @@ const OrderCard = ({ order }: { order: Order }) => {
 
       <View style={styles.orderTotal}>
         <ThemedText style={styles.totalPrice}>
-          Total: {order.totalPrice.toFixed(2)}€
+          Total: {order.total ? order.total.toFixed(2) : '0.00'}€
         </ThemedText>
       </View>
     </View>
@@ -449,4 +395,9 @@ const styles = StyleSheet.create({
     color: theme.colors.textSecondary,
     marginTop: theme.spacing.xs,
   },
-}); 
+  deliveryFeeText: {
+    fontSize: 14,
+    color: theme.colors.textSecondary,
+    marginTop: theme.spacing.xs,
+  },
+});

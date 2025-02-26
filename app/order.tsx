@@ -207,24 +207,35 @@ export default function OrderScreen() {
         orderNumber: orderNumber
       }, null, 2));
       
-      // Stocker la commande dans AsyncStorage pour pouvoir l'afficher dans l'historique
-      const existingOrdersString = await AsyncStorage.getItem('orders');
-      const existingOrders = existingOrdersString ? JSON.parse(existingOrdersString) : [];
-      const updatedOrders = [orderData, ...existingOrders];
-      await AsyncStorage.setItem('orders', JSON.stringify(updatedOrders));
-      
-      // Vider le panier
-      clearCart();
-      
-      
-      // Rediriger vers la page d'accueil avec un paramètre pour déclencher l'animation
-      router.replace({
-        pathname: '/',
-        params: { 
-          orderSuccess: 'true',
-          orderNumber: orderData.orderNumber
-        }
+      // Envoyer la commande à l'API
+      const token = await AsyncStorage.getItem('token');
+      const response = await axiosInstance.post('/api/orders', orderData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
       });
+
+      if (response.status === 201) {
+        // Stocker la commande dans AsyncStorage pour pouvoir l'afficher dans l'historique
+        const existingOrdersString = await AsyncStorage.getItem('orders');
+        const existingOrders = existingOrdersString ? JSON.parse(existingOrdersString) : [];
+        const updatedOrders = [orderData, ...existingOrders];
+        await AsyncStorage.setItem('orders', JSON.stringify(updatedOrders));
+        
+        // Vider le panier
+        clearCart();
+        
+        // Rediriger vers la page d'accueil avec un paramètre pour déclencher l'animation
+        router.replace({
+          pathname: '/',
+          params: { 
+            orderSuccess: 'true',
+            orderNumber: orderData.orderNumber
+          }
+        });
+      } else {
+        throw new Error('Erreur lors de la création de la commande');
+      }
     } catch (error) {
       console.error('Erreur lors de la commande:', error);
       setError('Une erreur est survenue lors de la commande. Veuillez réessayer.');
@@ -873,4 +884,4 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
   },
-}); 
+});
